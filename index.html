@@ -1,0 +1,2769 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ホワイトアウトサバイバル 英雄データベース</title>
+<style>
+  :root {
+    --bg: #0f1720;
+    --panel: #17222e;
+    --panel2: #1e2c3a;
+    --border: #2a3b4d;
+    --text: #e8eef4;
+    --muted: #93a4b5;
+    --accent: #4fc3f7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+  }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .toolbar input, .toolbar select {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+  .toolbar input[type="text"] { flex: 1; min-width: 160px; }
+  .count { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: border-color .15s, transform .1s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card.selected { border-color: var(--accent); background: #17324a; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .name { font-weight: 600; font-size: 15px; }
+  .tier {
+    font-weight: 700;
+    font-size: 12px;
+    padding: 2px 7px;
+    border-radius: 5px;
+    color: #0f1720;
+  }
+  .meta { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .class-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 4px;
+    color: #0f1720;
+    font-weight: 600;
+  }
+  .notes { font-size: 12px; color: #c3d0dc; line-height: 1.4; }
+  .checkbox-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .card.selected .checkbox-indicator {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f1720;
+  }
+  .compare-tray {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #101b26;
+    border-top: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    box-shadow: 0 -4px 12px rgba(0,0,0,.3);
+  }
+  .compare-tray.empty { display: none; }
+  .tray-label { font-size: 12px; color: var(--muted); }
+  .tray-chip {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tray-chip button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0;
+  }
+  .btn {
+    background: var(--accent);
+    color: #0f1720;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn.secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-width: 1000px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: auto;
+    padding: 20px;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--panel2); color: var(--muted); font-size: 11px; text-transform: uppercase; width: 120px; }
+  td.hero-col-name { font-weight: 700; font-size: 14px; }
+  .table-scroll { overflow-x: auto; }
+  .table-scroll th:first-child, .table-scroll td:first-child {
+    position: sticky; left: 0; background: var(--panel2); z-index: 1;
+  }
+  .compare-cards-view { display: none; }
+  .compare-hero-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .compare-hero-card .ch-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .compare-hero-card .ch-head h3 { margin: 0; font-size: 17px; }
+  .compare-hero-card .ch-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .compare-hero-card .ch-field { margin-top: 10px; }
+  .compare-hero-card .ch-field .ch-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+    letter-spacing: .03em;
+  }
+  .compare-hero-card .ch-field .ch-value { font-size: 13px; line-height: 1.5; }
+  .compare-hero-card .ch-tiers { display: flex; gap: 8px; flex-wrap: wrap; }
+  .compare-hero-card .ch-tiers .tier-chip {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    color: #0f1720;
+    font-weight: 700;
+  }
+  @media (max-width: 680px) {
+    .table-scroll { display: none; }
+    .compare-cards-view { display: block; }
+    .modal-overlay { padding: 10px; align-items: flex-start; }
+    .modal { padding: 14px; max-height: 92vh; }
+    .toolbar { padding: 10px; }
+  }
+  .skill-line { margin-bottom: 8px; line-height: 1.5; }
+  .skill-line:last-child { margin-bottom: 0; }
+  .skill-name { display: block; font-weight: 700; color: var(--accent); font-size: 12px; margin-bottom: 1px; }
+  .footer-note { margin-top: 24px; font-size: 11px; color: var(--muted); }
+  .footer-note a { color: var(--accent); }
+  .footer-logo { display: flex; justify-content: center; margin-top: 20px; padding-bottom: 60px; }
+  .footer-logo img { max-height: 48px; opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<h1>❄️ ホワイトアウトサバイバル 英雄データベース</h1>
+<div class="subtitle">全56体の英雄データ・比較ツール（データ元: GitHub / StrainReviews/wos-optimizer、日本語名は altema.jp のホワサバ攻略wikiを参照）</div>
+
+<div class="toolbar">
+  <input type="text" id="searchBox" placeholder="英雄名で検索...">
+  <select id="genFilter"><option value="">全世代</option></select>
+  <select id="classFilter">
+    <option value="">全兵種</option>
+    <option value="盾兵">盾兵</option>
+    <option value="槍兵">槍兵</option>
+    <option value="弓兵">弓兵</option>
+  </select>
+  <select id="rarityFilter">
+    <option value="">全レアリティ</option>
+    <option value="SSR">SSR</option>
+    <option value="SR">SR</option>
+    <option value="R">R</option>
+  </select>
+  <select id="tierFilter">
+    <option value="">全ティア</option>
+    <option value="S+">S+</option>
+    <option value="S">S</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+    <option value="C">C</option>
+    <option value="D">D</option>
+  </select>
+  <select id="sortBy">
+    <option value="tier">ティア順</option>
+    <option value="name">名前順</option>
+    <option value="gen">世代順</option>
+  </select>
+</div>
+
+<div class="count" id="countLabel"></div>
+<div class="grid" id="heroGrid"></div>
+
+<div class="footer-note">
+  データ出典: <a href="https://github.com/StrainReviews/wos-optimizer" target="_blank">github.com/StrainReviews/wos-optimizer</a>（コミュニティ作成のオープンソースツール）。日本語名・入手方法・解説は altema.jp のホワサバ攻略wiki（英雄個別ページの「欠片の獲得先」）で56体全て裏取りして修正済み。ゲーム内バランス調整により内容が変わる場合があります。
+</div>
+
+<div class="footer-logo">
+  <img src="mog_log.png" alt="logo" onerror="this.style.display='none'">
+</div>
+
+<div class="compare-tray empty" id="compareTray">
+  <span class="tray-label">選択中:</span>
+  <div id="trayChips" style="display:flex; gap:6px; flex-wrap:wrap; flex:1;"></div>
+  <button class="btn secondary" id="clearTray">クリア</button>
+  <button class="btn" id="openCompare">詳細・比較を見る</button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <strong id="compareModalTitle">英雄比較</strong>
+      <button class="btn secondary" id="closeModal">閉じる ✕</button>
+    </div>
+    <div id="compareTableWrap"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {
+  heroes: [],
+  tier_descriptions: {},
+  class_info: {},
+  rarity_colors: {}
+};
+
+// Embedded dataset
+fetch(); // placeholder, real data injected below
+</script>
+
+<script id="hero-data" type="application/json">
+{
+  "heroes": [
+    {
+      "name": "スミス",
+      "generation": 1,
+      "hero_class": "盾兵",
+      "rarity": "R",
+      "tier_overall": "D",
+      "tier_expedition": "D",
+      "tier_exploration": "C",
+      "how_to_obtain": "英雄募集・灯台情報・探検戦闘・共通の欠片交換",
+      "notes": "初期英雄。鉄鉱資源用の育成英雄。",
+      "best_use": "鉄鉱採集専用。戦闘ではエピック以上の盾兵に交代する。",
+      "name_en": "Smith",
+      "exploration_skills": [
+        {
+          "name": "ヘビーストライク",
+          "desc": "スミスがハンマーを渾身の力で振り下ろし、敵単体に攻撃力の150〜210%のダメージを与える。"
+        },
+        {
+          "name": "アイアンウィル",
+          "desc": "スミスの闘志により、4秒間防御力が5〜15%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "鍛え上げた鉄",
+          "desc": "鉄の採集速度が5〜25%上昇する。"
+        },
+        {
+          "name": "職人技",
+          "desc": "熟練の鍛冶技術により、鉄の採集上限が5〜25%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "ユージーン",
+      "generation": 1,
+      "hero_class": "盾兵",
+      "rarity": "R",
+      "tier_overall": "D",
+      "tier_expedition": "D",
+      "tier_exploration": "C",
+      "how_to_obtain": "英雄募集・灯台情報・探検戦闘・共通の欠片交換",
+      "notes": "木材資源用の育成英雄。",
+      "best_use": "木材採集専用。戦闘ではセルゲイなどエピック以上の盾兵に交代する。",
+      "name_en": "Eugene",
+      "exploration_skills": [
+        {
+          "name": "アックスホイール",
+          "desc": "ユージーンが斧を振り回し、周囲の敵に攻撃力の100〜140%のダメージを与える。"
+        },
+        {
+          "name": "ティンバースラッシュ",
+          "desc": "強力な振り下ろしの一撃で、敵単体に攻撃力の180〜250%のダメージを与える。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "森の後継者",
+          "desc": "木材の採集速度が5〜25%上昇する。"
+        },
+        {
+          "name": "熟練の木こり",
+          "desc": "熟練の伐採技術により、木材の採集上限が5〜25%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "チャーリー",
+      "generation": 1,
+      "hero_class": "槍兵",
+      "rarity": "R",
+      "tier_overall": "D",
+      "tier_expedition": "D",
+      "tier_exploration": "C",
+      "how_to_obtain": "英雄募集・灯台情報・探検戦闘・共通の欠片交換",
+      "notes": "石炭資源用の育成英雄。",
+      "best_use": "石炭採集専用。戦闘ではパトリックなどエピック以上の槍兵に交代する。",
+      "name_en": "Charlie",
+      "exploration_skills": [
+        {
+          "name": "散弾装填",
+          "desc": "チャーリーが炸裂弾を発射し、狭い範囲内の敵に攻撃力の120〜170%のダメージを与える。"
+        },
+        {
+          "name": "爆破地帯",
+          "desc": "爆発を起こし、攻撃力の150〜210%の範囲ダメージを与えて敵をノックバックさせる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "解体のプロ",
+          "desc": "石炭の採集速度が5〜25%上昇する。"
+        },
+        {
+          "name": "石炭採掘",
+          "desc": "採掘の熟練技術により、石炭の採集上限が5〜25%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "クラリス",
+      "generation": 1,
+      "hero_class": "弓兵",
+      "rarity": "R",
+      "tier_overall": "D",
+      "tier_expedition": "D",
+      "tier_exploration": "C",
+      "how_to_obtain": "英雄募集・灯台情報・探検戦闘・共通の欠片交換",
+      "notes": "食料資源用の育成英雄。氷原随一のハンター。",
+      "best_use": "食料採集専用。戦闘ではバシティなどエピック以上の弓兵に交代する。",
+      "name_en": "Cloris",
+      "exploration_skills": [
+        {
+          "name": "アローレイン",
+          "desc": "クロリスが矢の雨を放ち、範囲内の複数の敵に攻撃力の80〜110%のダメージを与える。"
+        },
+        {
+          "name": "ブルズアイ",
+          "desc": "精密射撃で敵単体に攻撃力の200〜280%のダメージを与え、会心率が上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "トップハンター",
+          "desc": "食料の採集速度が5〜25%上昇する。"
+        },
+        {
+          "name": "プレデター",
+          "desc": "熟練の追跡技術により、食料の採集上限が5〜25%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "セルゲイ",
+      "generation": 1,
+      "hero_class": "盾兵",
+      "rarity": "SR",
+      "tier_overall": "B",
+      "tier_expedition": "S",
+      "tier_exploration": "A",
+      "how_to_obtain": "ミッションクリア・英雄募集・灯台情報・共通の欠片交換",
+      "notes": "ゲーム最高の集結援軍（守備側）。遠征スキルで味方全部隊の被ダメージを軽減。",
+      "best_use": "最強の集結援軍（守備）。守備側の集結援軍では最左に配置。攻撃側の集結には不向き。",
+      "name_en": "Sergey",
+      "exploration_skills": [
+        {
+          "name": "シールドストライク",
+          "desc": "敵単体にダメージを与えると同時に自身の防御力を上昇させる。"
+        },
+        {
+          "name": "ジョイントディフェンス",
+          "desc": "戦闘中の味方全部隊の防御力を上昇させる。"
+        },
+        {
+          "name": "シールドブロック",
+          "desc": "一定確率で敵の攻撃を防ぎ、被ダメージを軽減する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ディフェンダーズエッジ",
+          "desc": "全部隊(他兵種を含む)の被ダメージを最大20%軽減する。ガリソン援軍として最強のスキル。"
+        },
+        {
+          "name": "ウィーケン",
+          "desc": "戦闘中、敵の攻撃力を低下させる。"
+        }
+      ]
+    },
+    {
+      "name": "ジーナ",
+      "generation": 1,
+      "hero_class": "弓兵",
+      "rarity": "SR",
+      "tier_overall": "C",
+      "tier_expedition": "B",
+      "tier_exploration": "B",
+      "how_to_obtain": "「ジーナの復讐」イベント・共通の欠片交換",
+      "notes": "スタミナ消費を20%削減。野獣討伐やポーラーテラーに最適。",
+      "best_use": "野獣討伐（スタミナ節約）に採用。第2世代以降は戦闘でフィリー（フレンダー）に交代。",
+      "name_en": "Gina",
+      "exploration_skills": [
+        {
+          "name": "インセンディアリーアロー",
+          "desc": "対象に攻撃力の210〜290%、周囲の敵に攻撃力の70〜98%のダメージを与える。"
+        },
+        {
+          "name": "ウィンドトーカー",
+          "desc": "攻撃速度が10〜30%上昇する。"
+        },
+        {
+          "name": "イーグルアイズ",
+          "desc": "会心率が7〜20%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "エンデュランストレーニング",
+          "desc": "スタミナ消費を10〜20%軽減する。"
+        },
+        {
+          "name": "クイックペース",
+          "desc": "荒野での行軍速度を20〜100%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "バシティ",
+      "generation": 1,
+      "hero_class": "弓兵",
+      "rarity": "SR",
+      "tier_overall": "B",
+      "tier_expedition": "A",
+      "tier_exploration": "B",
+      "how_to_obtain": "ミッションクリア・英雄募集・灯台情報・共通の欠片交換",
+      "notes": "最強クラスのSR弓兵。SR募集や情報任務からシャードを入手しやすい。",
+      "best_use": "序盤の主力弓兵。無課金にも最適。第2世代以降のレジェンド弓兵が揃うまで活躍。",
+      "name_en": "Bahiti",
+      "exploration_skills": [
+        {
+          "name": "プレサイスショット",
+          "desc": "バーヒティが敵の弱点を正確に狙い、攻撃力の400〜560%の大ダメージを与える。"
+        },
+        {
+          "name": "クイックショット",
+          "desc": "野生でのサバイバル経験から、攻撃速度が10〜30%上昇する。"
+        },
+        {
+          "name": "パスファインダービジョン",
+          "desc": "あらゆる攻撃のダメージが10〜30%増加する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "シックスセンス",
+          "desc": "全部隊の被ダメージを4〜20%軽減する。"
+        },
+        {
+          "name": "フルオレセンス",
+          "desc": "バーヒティの戦場での直感により、味方全部隊の攻撃に50%の確率で与ダメージが10〜50%増加する効果が付与される。"
+        }
+      ]
+    },
+    {
+      "name": "ソユン",
+      "generation": 1,
+      "hero_class": "弓兵",
+      "rarity": "SR",
+      "tier_overall": "C",
+      "tier_expedition": "B",
+      "tier_exploration": "B",
+      "how_to_obtain": "共通の欠片交換・故郷と遠方・英雄募集",
+      "notes": "攻撃・回復バフを持つ育成英雄。全部隊攻撃力+25%の集結援軍役。",
+      "best_use": "序盤の集結援軍（全部隊攻撃力+25%）。医務室の回復速度アップにも貢献。より良い選択肢が揃うまで採用。",
+      "name_en": "Seo-yoon",
+      "exploration_skills": [
+        {
+          "name": "ハートビートオブヴァラー",
+          "desc": "ソユンが心躍る旋律を奏で、4秒間すべての英雄の攻撃力が5〜15%上昇する。"
+        },
+        {
+          "name": "ブルズアイバッシュ",
+          "desc": "太鼓で敵単体を打ち据え、攻撃力の180〜250%のダメージを与える。"
+        },
+        {
+          "name": "ゲイルズパルス",
+          "desc": "リズミカルな太鼓の音により、3秒間すべての英雄の攻撃速度が10〜30%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ラリーングビート",
+          "desc": "鼓舞する太鼓の音により、味方全部隊の攻撃力が5〜25%上昇する。"
+        },
+        {
+          "name": "伝統医学",
+          "desc": "古来の治療術により、医療所の治療速度が10〜50%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "ジャセル",
+      "generation": 1,
+      "hero_class": "弓兵",
+      "rarity": "SR",
+      "tier_overall": "B",
+      "tier_expedition": "A",
+      "tier_exploration": "B",
+      "how_to_obtain": "共通の欠片交換・故郷と遠方・英雄募集",
+      "notes": "集結ダメージ上昇と研究速度上昇を持つ育成英雄。",
+      "best_use": "序盤の集結援軍・リーダー（全部隊与ダメージ+25%）。研究速度も+15%上昇。",
+      "name_en": "Jasser",
+      "exploration_skills": [
+        {
+          "name": "トリプルボレー",
+          "desc": "矢を三連続で発射し、それぞれ攻撃力の80〜110%のダメージを与える。"
+        },
+        {
+          "name": "サプレッシブファイア",
+          "desc": "連続射撃で、直線上の敵に0.5秒ごとに攻撃力の40〜55%のダメージを2秒間与え続ける。"
+        },
+        {
+          "name": "ナチュラルプレシジョン",
+          "desc": "生まれ持った正確さにより、会心率が5〜15%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "タクティカルジーニアス",
+          "desc": "卓越した戦術により、味方全部隊の与ダメージが5〜25%上昇する。"
+        },
+        {
+          "name": "エンライトンドウォーフェア",
+          "desc": "軍事知識により、研究速度が3〜15%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "パトリック",
+      "generation": 1,
+      "hero_class": "槍兵",
+      "rarity": "SR",
+      "tier_overall": "B",
+      "tier_expedition": "A",
+      "tier_exploration": "B",
+      "how_to_obtain": "英雄募集・灯台情報・共通の欠片交換",
+      "notes": "回復とタンク性能を兼ね備えた優秀な初期槍兵。無課金にも最適。",
+      "best_use": "最優秀のエピック槍兵。味方の回復と生存力アップ。モーリー（ジャスミン）やフリントを育てるまで活躍。",
+      "name_en": "Patrick",
+      "exploration_skills": [
+        {
+          "name": "BBQフィースト",
+          "desc": "パトリックが豪華な食事を用意し、味方全部隊のHPを攻撃力の200〜280%分回復させ、4秒間攻撃力を5〜7%上昇させる。"
+        },
+        {
+          "name": "シックベリー",
+          "desc": "パトリックの脂肪が防具の役割を果たし、被ダメージを10〜30%軽減する。"
+        },
+        {
+          "name": "エマージェンシースナック",
+          "desc": "パトリックの間食習慣により、5秒ごとに攻撃力の50〜70%分のHPを回復する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "スーパーニュートリエンツ",
+          "desc": "パトリックの料理の数々が味方全部隊を元気づけ、HPが5〜25%上昇する。"
+        },
+        {
+          "name": "カロリックブースター",
+          "desc": "パトリックのご馳走が兵士たちの力を引き出し、味方全部隊の攻撃力が5〜25%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "リンセツ",
+      "generation": 1,
+      "hero_class": "槍兵",
+      "rarity": "SR",
+      "tier_overall": "B",
+      "tier_expedition": "B",
+      "tier_exploration": "B",
+      "how_to_obtain": "英雄募集",
+      "notes": "攻撃力上昇と訓練速度アップを持つ育成英雄。低HP時の防御バフも優秀。",
+      "best_use": "パトリックの代替。訓練速度アップが部隊育成に有用。",
+      "name_en": "Ling Xue",
+      "exploration_skills": [
+        {
+          "name": "ハリケーンホイール",
+          "desc": "槍を振り回して旋風を巻き起こし、攻撃力の160〜224%の範囲ダメージを与える。"
+        },
+        {
+          "name": "ゲイルフォース",
+          "desc": "風を纏った一撃により、3秒間攻撃速度が15〜45%上昇する。"
+        },
+        {
+          "name": "デスパレートメジャーズ",
+          "desc": "HPが30%を下回ると、防御力が20〜60%、攻撃力が10〜30%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ウィザリングアサルト",
+          "desc": "衰弱させる攻撃により、敵の攻撃力を4〜20%低下させる。"
+        },
+        {
+          "name": "トータルコントロール",
+          "desc": "規律により、訓練速度が5〜25%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "ルム・ボーガン",
+      "generation": 1,
+      "hero_class": "盾兵",
+      "rarity": "SR",
+      "tier_overall": "B",
+      "tier_expedition": "B",
+      "tier_exploration": "B",
+      "how_to_obtain": "共通の欠片交換・故郷と遠方・英雄募集",
+      "notes": "エメラルドバレーの戦士。ゲリラ戦術で敵ダメージを軽減。狩猟行軍速度が非常に優秀。",
+      "best_use": "狩猟に最適。最大レベルで狩猟行軍速度+100%。野獣討伐やポーラーテラーで活躍。",
+      "name_en": "Lumak Bokan",
+      "exploration_skills": [
+        {
+          "name": "アースシェイク",
+          "desc": "ルマックが地面を踏み鳴らして地震を起こし、攻撃力の180〜252%の範囲ダメージを与え、1秒間敵を気絶させる。"
+        },
+        {
+          "name": "エコーイングブースト",
+          "desc": "ジャングルの太鼓の音により、4秒間すべての英雄の攻撃力が8〜24%上昇する。"
+        },
+        {
+          "name": "ジャングルボーンアジリティ",
+          "desc": "生来の敏捷性により、5〜15%の確率で回避し、移動速度が10〜30%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "タクティカルデセプション",
+          "desc": "ゲリラ戦術により、敵の与ダメージを4〜20%低下させる。"
+        },
+        {
+          "name": "エメラルドウォリアー",
+          "desc": "ジャングルでの経験により、狩猟時の行軍速度が20〜100%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "ジェロニモ",
+      "generation": 1,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "S+",
+      "tier_expedition": "S+",
+      "tier_exploration": "S",
+      "how_to_obtain": "VIPパック購入・最強領主",
+      "notes": "最強クラスの盾兵。全部隊攻撃力・与ダメージ+25%。集結やSvSに必須。",
+      "best_use": "最優先で育成すべき英雄。最強の集結リーダー。SvSに必須。あらゆる戦闘で常時採用。",
+      "name_en": "Jeronimo",
+      "exploration_skills": [
+        {
+          "name": "コンボスラッシュ",
+          "desc": "対象エリアの敵を打ち上げ、続けて3連撃を放つ。各撃は攻撃力の160〜224%のダメージを与える。"
+        },
+        {
+          "name": "ソードアート",
+          "desc": "ジェロニモの攻撃のたびに剣気が放たれ、前方の長方形範囲内の敵に攻撃力の15〜23%のダメージを与える。"
+        },
+        {
+          "name": "ローンウルフ",
+          "desc": "優勢を突く達人であり、HPが50%を超えている間、攻撃力が16〜48%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "バトルマニフェスト",
+          "desc": "戦闘前に士気を鼓舞する演説を行い、味方全部隊の与ダメージを5〜25%上昇させる。"
+        },
+        {
+          "name": "ソードメンター",
+          "desc": "剣術の奥義を伝授し、味方全部隊の攻撃力を5〜25%上昇させる。"
+        },
+        {
+          "name": "エキスパートソードマンシップ",
+          "desc": "剣術の心得により、4ターンごとに2ターンの間、味方全部隊の与ダメージが6〜30%上昇する。"
+        }
+      ]
+    },
+    {
+      "name": "ナタリア",
+      "generation": 1,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "初回チャージ・VIPパック購入",
+      "notes": "序盤から使える優秀な盾兵。複数世代にわたって長く活躍できる。",
+      "best_use": "序盤の優秀な盾兵タンク。探検や集結の2番手盾兵として長く活躍。",
+      "name_en": "Natalia",
+      "exploration_skills": [
+        {
+          "name": "ビーストチャージ",
+          "desc": "ナタリアの熊が地面を激しく叩きつけ、範囲内の敵をノックバックさせつつ1秒間気絶させ、攻撃力の160〜224%のダメージを与える。"
+        },
+        {
+          "name": "ウィップ",
+          "desc": "敵単体への直接攻撃で攻撃力の150〜210%のダメージを与える。"
+        },
+        {
+          "name": "レイジレスポンス",
+          "desc": "被ダメージ時に10%の確率で3秒間攻撃力が4〜12%上昇する(最大5重まで重複)。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "フェラルプロテクション",
+          "desc": "味方全部隊に40%の確率で被ダメージを10〜50%軽減する効果を付与する。"
+        },
+        {
+          "name": "クイーンオブザワイルド",
+          "desc": "ナタリアが指揮する全部隊の攻撃力を常時5〜25%上昇させる。"
+        },
+        {
+          "name": "コールオブザワイルド",
+          "desc": "自然とのつながりの力で、味方全部隊の与ダメージを5〜25%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "ジャスミン",
+      "generation": 1,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "B",
+      "tier_expedition": "B",
+      "tier_exploration": "A",
+      "how_to_obtain": "共通の欠片交換・ジャスミンパック・英雄募集・生存者の試練・灯台情報・7日間ログイン・英雄殿堂",
+      "notes": "序盤の探検向け槍兵。範囲ダメージ+凍結が優秀。",
+      "best_use": "序盤の探検向け槍兵。フリントやローガンを育てるまで活躍。",
+      "name_en": "Molly",
+      "exploration_skills": [
+        {
+          "name": "スーパースノーボール",
+          "desc": "モリーが特大の雪玉を放ち、攻撃力の180〜252%の範囲ダメージを与え、1.5秒間敵を凍結させる。"
+        },
+        {
+          "name": "フロストアンブッシュ",
+          "desc": "巧みな隠密技術で敵を奇襲し、攻撃力の150〜210%のダメージを与える。"
+        },
+        {
+          "name": "ユースフルパーシステンス",
+          "desc": "困難を好む性分により、HPが50%を下回ると攻撃速度が20〜60%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "スノーズグレイス",
+          "desc": "雪崩を起こして敵の視界を奪い、味方全部隊に40%の確率で被ダメージを10〜50%軽減する効果を付与する。"
+        },
+        {
+          "name": "アイスドミニオン",
+          "desc": "雪原を得意とし、味方全部隊の攻撃に50%の確率で与ダメージが10〜50%増加する効果を付与する。"
+        },
+        {
+          "name": "ユースフルレイジ",
+          "desc": "怒れるモリーの恐ろしさにより、味方全部隊の与ダメージを5〜25%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "ジンマン",
+      "generation": 1,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "C",
+      "tier_expedition": "C",
+      "tier_exploration": "B",
+      "how_to_obtain": "ラッキールーレット・デイリー割引・英雄殿堂・英雄集結",
+      "notes": "建築コスト15%減・建築速度アップの育成英雄。戦闘力は低め。",
+      "best_use": "内政専用。建築速度・建築費用削減スキルを使用。戦闘では交代する。",
+      "name_en": "Zinman",
+      "exploration_skills": [
+        {
+          "name": "ネイルガン",
+          "desc": "ジンマンが釘の弾幕を放ち、1発ごとに攻撃力の60〜85%のダメージを3発与える。"
+        },
+        {
+          "name": "アンダープレッシャー",
+          "desc": "HPが50%を下回ると、攻撃速度が10〜30%、防御力が5〜15%上昇する。"
+        },
+        {
+          "name": "フォーティフィケーション",
+          "desc": "ジンマンの技術により、4秒間周囲の味方部隊の防御力が10〜30%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ビルディングスピード",
+          "desc": "すべての建築の建設速度が3〜15%上昇する。"
+        },
+        {
+          "name": "バスティオニスト",
+          "desc": "建物のアップグレードコストを3〜15%削減する。"
+        },
+        {
+          "name": "ポジショナルバッター",
+          "desc": "ジンマンの防衛戦術により、ガリソンでの被ダメージを4〜20%軽減する。"
+        }
+      ]
+    },
+    {
+      "name": "フリント",
+      "generation": 2,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "ラッキールーレット・共通の欠片交換・英雄殿堂",
+      "notes": "優秀な盾兵。集結やSvSで長く活躍できるおすすめ育成先。",
+      "best_use": "第2世代最優秀の槍兵。集結やSvSで活躍。ゴードンを育てるまで重点投資の価値あり。",
+      "name_en": "Flint",
+      "exploration_skills": [
+        {
+          "name": "ファイアーズオブヴェンジェンス",
+          "desc": "フリントの火炎攻撃が0.5秒ごとにダメージを与え、2秒間対象の被ダメージを10〜30%増加させる。"
+        },
+        {
+          "name": "インシネレーター",
+          "desc": "HPが50%を下回ると、最大HPの20〜40%を回復する(戦闘中1回のみ発動)。"
+        },
+        {
+          "name": "ヒートディフュージョン",
+          "desc": "フリントの温かい炎により、味方英雄の攻撃速度を3〜7%上昇させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "パイロマニアック",
+          "desc": "歩兵の与ダメージをスキルレベルに応じて20〜100%上昇させる。"
+        },
+        {
+          "name": "バーニングリゾルブ",
+          "desc": "味方全部隊の攻撃力を5〜25%上昇させる。"
+        },
+        {
+          "name": "イモレーション",
+          "desc": "フリントの破壊的な炎の力で、味方全部隊の脅威度を5〜25%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "フレンダー",
+      "generation": 2,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "B",
+      "tier_exploration": "S",
+      "how_to_obtain": "デイリー割引・最強領主・英雄集結・氷原支配者・最強王国",
+      "notes": "ゲーム屈指の回復役。探検コンテンツに必須級の存在。",
+      "best_use": "必須級の回復役。探検コンテンツすべてに必要。回復スキルを優先強化。",
+      "name_en": "Philly",
+      "exploration_skills": [
+        {
+          "name": "ファーストエイド",
+          "desc": "フィリーの高度な医療技術により、味方全英雄のHPを即座に攻撃力の200〜280%分回復させる。"
+        },
+        {
+          "name": "リストラティブハンズ",
+          "desc": "応急処置の達人であるフィリーが、HPが最も少ない味方英雄のHPを即座に攻撃力の100〜140%分回復させる。"
+        },
+        {
+          "name": "パラリティックローション",
+          "desc": "フィリーが対象を毒で麻痺させ、1秒間行動不能にしつつ攻撃力の140〜196%のダメージを与える。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ヴィガータクティクス",
+          "desc": "フィリー秘伝の薬で兵士を強化し、味方全部隊の攻撃力を3〜15%、防御力を2〜10%上昇させる。"
+        },
+        {
+          "name": "ドーセージブースト",
+          "desc": "フィリー秘伝の薬で兵士の力を引き出し、味方全部隊の攻撃に25%の確率で与ダメージが120〜200%増加する効果を付与する。"
+        },
+        {
+          "name": "エナジャイジングショット",
+          "desc": "フィリーの特殊な一撃が兵士たちの集中力を高め、味方全部隊に40%の確率で被ダメージを10〜50%軽減する効果を付与する。"
+        }
+      ]
+    },
+    {
+      "name": "アロンゾ",
+      "generation": 2,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "英雄殿堂",
+      "notes": "範囲ダメージと自己回復を兼ね備えた優秀な弓兵。ジェロニモとの相性も良い。",
+      "best_use": "自己回復付きの優秀な弓兵。探検で活躍しSvSでも安定。ジェロニモとの相性が良い。",
+      "name_en": "Alonso",
+      "exploration_skills": [
+        {
+          "name": "トラップネット",
+          "desc": "アロンソが対象エリアに大きな網を広げ、攻撃力の200〜280%の範囲ダメージを与え、1.5秒間敵を行動不能にする。"
+        },
+        {
+          "name": "タイダルフォース",
+          "desc": "津波のような勢いで銛を放ち、攻撃力の50〜70%の範囲ダメージを与える。"
+        },
+        {
+          "name": "ハープーンブラスト",
+          "desc": "アロンソの重い銛が5〜8回の攻撃ごとに0.2〜0.5秒間敵を気絶させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "オンスロート",
+          "desc": "40%の確率で味方部隊の脅威度が10〜50%上昇する。"
+        },
+        {
+          "name": "アイアンストレングス",
+          "desc": "20%の確率で敵全部隊の与ダメージを2ターンの間10〜50%軽減する。"
+        },
+        {
+          "name": "ポイズンハープーン",
+          "desc": "毒の塗料により、味方部隊に50%の確率で与ダメージが10〜50%増加する効果を付与する。"
+        }
+      ]
+    },
+    {
+      "name": "ローガン",
+      "generation": 3,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "S",
+      "tier_exploration": "A",
+      "how_to_obtain": "英雄殿堂",
+      "notes": "最強クラスの守備役。SvSの集結防衛に必須。",
+      "best_use": "最優秀の守備役。SvSの集結防衛に必須。守備プレイヤーは最優先で育成。",
+      "name_en": "Logan",
+      "exploration_skills": [
+        {
+          "name": "フィストオブデストラクション",
+          "desc": "ローガンが渾身のパンチを繰り出し、周囲の敵に攻撃力の250〜350%のダメージを与える。"
+        },
+        {
+          "name": "パワードスーツ",
+          "desc": "ローガンの強化装甲により、防御力が15〜35%、HPが10〜30%上昇する。"
+        },
+        {
+          "name": "ブラスタリーストライク",
+          "desc": "風の力を纏った一撃で攻撃力の300〜420%のダメージを与え、敵をノックバックさせる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ライオンストライク",
+          "desc": "猛々しい力でランサーの与ダメージを10〜50%上昇させる。"
+        },
+        {
+          "name": "ライオンインティミデーション",
+          "desc": "威圧により敵の攻撃力を4〜20%低下させる。"
+        },
+        {
+          "name": "リーダーインスピレーション",
+          "desc": "鼓舞するリーダーシップにより、味方全部隊の防御力を4〜20%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "ミア",
+      "generation": 3,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "S",
+      "how_to_obtain": "ラッキールーレット",
+      "notes": "初期世代より高火力でチーム貢献度も高い槍兵。",
+      "best_use": "第3世代最優秀の弓兵。探検で強力、SvSでもそこそこ活躍。",
+      "name_en": "Mia",
+      "exploration_skills": [
+        {
+          "name": "フェイツフィナーレ",
+          "desc": "ミアがタロットカードを投げつけ、攻撃力の270〜378%のダメージを与えると同時に、2秒間対象の攻撃力を20%低下させるか1.5秒間気絶させる。"
+        },
+        {
+          "name": "バッドオーメン",
+          "desc": "敵を呪い、変動するダメージ(攻撃力の50〜70%を基準値として5%〜600%の範囲)を与える。"
+        },
+        {
+          "name": "ガーディアンオブデスティニー",
+          "desc": "HPが最も少ない味方英雄を守り、HP(攻撃力の100〜140%を基準値として5%〜400%の範囲)を回復させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "バッドラックストリーク",
+          "desc": "味方全部隊の攻撃に50%の確率で対象を呪い、被ダメージを10〜50%増加させる効果を付与する。"
+        },
+        {
+          "name": "ラッキーチャーム",
+          "desc": "味方全部隊に50%の確率で与ダメージが10〜50%増加する効果を付与する。"
+        },
+        {
+          "name": "リチュアルデサイファリング",
+          "desc": "戦闘前に危険を予見し、味方全部隊に40%の確率で被ダメージを10〜50%軽減する効果を付与する。"
+        }
+      ]
+    },
+    {
+      "name": "グレッグ",
+      "generation": 3,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "デイリー割引・最強領主・英雄集結",
+      "notes": "めまい状態や被ダメージ増加を得意とする妨害役の弓兵。",
+      "best_use": "野獣討伐や燃霜鉱区に最適。",
+      "name_en": "Greg",
+      "exploration_skills": [
+        {
+          "name": "ライチャスウィンド",
+          "desc": "空から檻を召喚し、範囲内の敵に攻撃力の160〜224%のダメージを与え、2秒間気絶させる。"
+        },
+        {
+          "name": "ポエティックジャスティス",
+          "desc": "敵を裁判にかけ、「処罰」で攻撃力の220〜300%のダメージを与えるか、「表彰」で攻撃力の50%分回復する。"
+        },
+        {
+          "name": "フェアジャッジメント",
+          "desc": "敵を厳しく罰し、3秒間その被ダメージを10〜30%増加させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ソードオブジャスティス",
+          "desc": "味方部隊を正義の剣に変え、20%の確率で3ターンの間与ダメージを8〜40%上昇させる。"
+        },
+        {
+          "name": "デタレンスオブロー",
+          "desc": "法の権威で敵を威圧し、味方部隊の攻撃に20%の確率で2ターンの間敵全部隊の与ダメージを10〜50%低下させる効果を付与する。"
+        },
+        {
+          "name": "ローアンドオーダー",
+          "desc": "法と秩序への信念により、味方全部隊のHPを5〜25%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "アクモス",
+      "generation": 4,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "デイリー割引・最強領主・英雄集結",
+      "notes": "無敵状態と盾兵ダメージ強化を持つ前衛タンク。探検での耐久役に最適。",
+      "best_use": "優秀な守備型盾兵。探検のタンク役に最適。",
+      "name_en": "Ahmose",
+      "exploration_skills": [
+        {
+          "name": "クトゥグアズプロテクション",
+          "desc": "アモーゼが無敵状態(移動・スキル使用不可、状態異常無効)となり、2秒間周囲の味方部隊の被ダメージを30〜70%軽減する。"
+        },
+        {
+          "name": "デイブレイクナイフ",
+          "desc": "鋭い槍で敵を貫き、攻撃力の70〜98%のダメージを与え、2秒間敵の被ダメージを20%増加させる。"
+        },
+        {
+          "name": "アンセストラルブレッシング",
+          "desc": "「クトゥグアズプロテクション」発動後、5秒間かけて攻撃力の30〜42%分のHPを回復する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "バイパーフォーメーション",
+          "desc": "歩兵は4回に1回攻撃を止め、2ターンの間ランサー/マークスマンの被ダメージを10〜30%、歩兵の被ダメージを10〜70%軽減する。"
+        },
+        {
+          "name": "プレイヤーオブフレイム",
+          "desc": "フレイムクリスタルの力で歩兵の与ダメージを20〜100%増幅させる。"
+        },
+        {
+          "name": "ブレイドオブライト",
+          "desc": "フレイムクリスタルで歩兵の武器を強化し、1ターンの間攻撃ごとのダメージを12〜60%、対象の被ダメージを5〜25%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "レイナ",
+      "generation": 4,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "S",
+      "how_to_obtain": "英雄殿堂",
+      "notes": "範囲ダメージと回避を兼ね備えた暗殺者タイプ。探検で高い攻撃力を発揮。",
+      "best_use": "探検向けの優秀な暗殺者。「幻影急襲」は範囲420%ダメージ。「暗殺者の本能」で全部隊の通常攻撃ダメージ+30%。",
+      "name_en": "Reina",
+      "exploration_skills": [
+        {
+          "name": "ポイズンオブデーモン",
+          "desc": "レイナが敵(英雄優先)に幻惑を付与し、攻撃力の100〜140%のダメージを与え、1.5秒間行動不能にする。"
+        },
+        {
+          "name": "ヴァニシングテクニック",
+          "desc": "通常攻撃を受けた際、5〜25%の確率で幻惑により敵を混乱させつつダメージを回避する。"
+        },
+        {
+          "name": "ファントムアサルト",
+          "desc": "幻影で敵の背後から奇襲し、攻撃力の300〜420%の範囲ダメージを与える。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "アサシンズインスティンクト",
+          "desc": "敵の弱点を狙い、味方全部隊の通常攻撃ダメージを10〜30%上昇させる。"
+        },
+        {
+          "name": "スウィフトジャイヴ",
+          "desc": "レイナの卓越した指揮により、味方全部隊に4〜20%の確率で通常攻撃を回避する効果を付与する。"
+        },
+        {
+          "name": "シャドウブレード",
+          "desc": "ランサーが25%の確率で追加攻撃を行い、攻撃力の120〜200%のダメージを与える。"
+        }
+      ]
+    },
+    {
+      "name": "リオン",
+      "generation": 4,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "S",
+      "how_to_obtain": "ラッキールーレット",
+      "notes": "デバフ解除と回復低下を持つ支援型弓兵。妨害・制御の解除役として優秀。",
+      "best_use": "最優秀の守備型弓兵。デバフの解除・防止に優れる。",
+      "name_en": "Lynn",
+      "exploration_skills": [
+        {
+          "name": "ヒムオブシドラク",
+          "desc": "味方全部隊のデバフをすべて解除し、3〜5秒間攻撃力を3〜7%上昇させ、デバフ無効化状態を付与する。"
+        },
+        {
+          "name": "リーサルフィナーレ",
+          "desc": "貫通する弾丸を放ち、着弾経路上の敵に攻撃力の220〜300%のダメージを与える。"
+        },
+        {
+          "name": "ディスコーダントチューン",
+          "desc": "敵全部隊の攻撃速度を1〜3%、回復効果を40〜60%低下させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ソングオブライオン",
+          "desc": "40%の確率で味方全部隊の与ダメージを10〜50%上昇させる。"
+        },
+        {
+          "name": "メランコリックバラード",
+          "desc": "敵部隊の与ダメージを4〜20%低下させる。"
+        },
+        {
+          "name": "オーナイカデンツァ",
+          "desc": "マークスマンの攻撃力が3回攻撃するごとに1〜5%上昇し、戦闘終了まで重複する。"
+        }
+      ]
+    },
+    {
+      "name": "ヘクトー",
+      "generation": 5,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "S",
+      "tier_exploration": "A",
+      "how_to_obtain": "ラッキールーレット",
+      "notes": "行動不能耐性とHP低下時のダメージ強化を持つ戦闘型盾兵。集結戦で活躍。",
+      "best_use": "集結戦で優秀。「剣の旋風」で4秒間CC無効化。「サバイバル本能」でHP50%以下時に被ダメージ-60%・攻撃力+48%。",
+      "name_en": "Hector",
+      "exploration_skills": [
+        {
+          "name": "ソードワールウィンド",
+          "desc": "剣技の旋風を巻き起こし、4秒間攻撃速度を80〜120%上昇させ、凍結・気絶などの状態異常を無効化する。"
+        },
+        {
+          "name": "デスペラード",
+          "desc": "危険を糧にする性分により、HPが50%を下回ると被ダメージが20〜60%軽減される。"
+        },
+        {
+          "name": "アドレナリンサージ",
+          "desc": "HPが50%を下回ると攻撃力が16〜48%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "サバイバルインスティンクト",
+          "desc": "40%の確率で味方全部隊の被ダメージを10〜50%軽減する。"
+        },
+        {
+          "name": "ランパント",
+          "desc": "歩兵の与ダメージを100〜200%、マークスマンの与ダメージを20〜100%上昇させる(10回攻撃分、効果は逓減)。"
+        },
+        {
+          "name": "ブリッツ",
+          "desc": "攻撃時に25%の確率で120〜200%のダメージを与える。"
+        }
+      ]
+    },
+    {
+      "name": "ノラ",
+      "generation": 5,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S+",
+      "tier_exploration": "A",
+      "how_to_obtain": "デイリー割引・最強領主・英雄集結",
+      "notes": "最強クラスの集結援軍役。槍兵ダメージを大幅強化するスキル持ち。",
+      "best_use": "最優先の集結援軍。「奇襲」で+100%の追加ダメージ。SvSでの優先育成対象。",
+      "name_en": "Norah",
+      "exploration_skills": [
+        {
+          "name": "バラージ",
+          "desc": "ランダムな対象(英雄優先)に5発の手榴弾を連続投擲し、攻撃力の60〜84%の範囲ダメージを与える。"
+        },
+        {
+          "name": "フラッシュバン",
+          "desc": "閃光弾を投げつけ、攻撃力の50〜70%のダメージを与えて1.5秒間対象を気絶させる。"
+        },
+        {
+          "name": "ヴァルキリークライ",
+          "desc": "敵を電撃し、味方全部隊の攻撃力を3〜5%上昇させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "コンバインドアームズ",
+          "desc": "歩兵とマークスマンの被ダメージを3〜15%軽減し、与ダメージを3〜15%上昇させる。"
+        },
+        {
+          "name": "スニークストライク",
+          "desc": "攻撃時に20%の確率で敵全体に20〜100%の追加ダメージを与える。最強のランサー援軍スキル。"
+        },
+        {
+          "name": "モメンタム",
+          "desc": "ランサーが5回攻撃するごとに2ターンの間、味方全部隊の与ダメージを5〜25%上昇させ、被ダメージを5〜25%軽減する。"
+        }
+      ]
+    },
+    {
+      "name": "グエン",
+      "generation": 5,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "A",
+      "tier_exploration": "S+",
+      "how_to_obtain": "英雄殿堂",
+      "notes": "初めて後衛を直接狙える弓兵。50%の確率で連続攻撃する高火力アタッカー。",
+      "best_use": "探検最優秀の攻撃型弓兵。敵の後衛を直接狙える。バースト火力が非常に高い。",
+      "name_en": "Gwen",
+      "exploration_skills": [
+        {
+          "name": "プレシジョンストライク",
+          "desc": "グウェンが敵の後衛を狙い撃ち、ダメージ役や支援役に大ダメージを与える。"
+        },
+        {
+          "name": "インセンディアリーグレネード",
+          "desc": "焼夷手榴弾を投げ、範囲ダメージを与えて燃える地面を残す。"
+        },
+        {
+          "name": "エアリアルスーペリオリティ",
+          "desc": "空中戦術により攻撃力上昇と回避率上昇の効果を得る。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "イーグルビジョン",
+          "desc": "対象にマークを付け、味方全部隊に対する被ダメージを最大25%増加させる。"
+        },
+        {
+          "name": "エアドミナンス",
+          "desc": "マークスマンのダメージを上昇させ、部隊全体に戦闘バフを付与する。"
+        },
+        {
+          "name": "カーペットボンビング",
+          "desc": "定期的に範囲爆撃を行い、敵全体にダメージを与える。"
+        }
+      ]
+    },
+    {
+      "name": "ジェシー",
+      "generation": 1,
+      "hero_class": "槍兵",
+      "rarity": "SR",
+      "tier_overall": "A",
+      "tier_expedition": "S+",
+      "tier_exploration": "B",
+      "how_to_obtain": "英雄募集・灯台情報・生存者の試練・共通の欠片交換",
+      "notes": "ゲーム最高クラスの攻撃側集結援軍。与ダメージ+25%スキルが全ダメージ種別に適用。",
+      "best_use": "最優秀の攻撃側集結援軍。攻撃側の集結や熊トラップでは最左に配置。",
+      "name_en": "Jessie",
+      "exploration_skills": [
+        {
+          "name": "バーストファイア",
+          "desc": "ジェシーが前方扇状に機関銃を掃射し、0.5秒ごとに攻撃力の55〜75%のダメージを2秒間与え続ける。"
+        },
+        {
+          "name": "ディフェンスアップグレード",
+          "desc": "ジェシーが装甲を強化し、防御力を25〜70%上昇させる。"
+        },
+        {
+          "name": "ウェポンアップグレード",
+          "desc": "ジェシーの武器強化により、攻撃力が8〜24%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "スタンドオブアームズ",
+          "desc": "味方部隊に高度な武装を施し、全部隊の与ダメージを5〜25%上昇させる。ゲーム最強の攻撃援軍スキル。"
+        },
+        {
+          "name": "バルワークス",
+          "desc": "ジェシーの卓越した技術で部隊の装甲を強化し、全部隊の被ダメージを4〜20%軽減する。"
+        }
+      ]
+    },
+    {
+      "name": "無名",
+      "generation": 6,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "S+",
+      "tier_expedition": "S+",
+      "tier_exploration": "S+",
+      "how_to_obtain": "英雄殿堂",
+      "notes": "最強クラスの英雄の一体。あらゆる場面で活躍できる万能盾兵。",
+      "best_use": "ゲーム最強クラスの英雄。SvS・集結・探検すべてで活躍。ジェロニモと組ませて鉄壁の前衛に。",
+      "name_en": "Wu Ming",
+      "exploration_skills": [
+        {
+          "name": "サイクロンバリア",
+          "desc": "杖を旋回させて堅固な障壁を形成し、攻撃力の100〜140%の範囲ダメージを与えつつ、2秒間無敵状態になる。"
+        },
+        {
+          "name": "インナークラリティ",
+          "desc": "心の静けさを得て、4秒間攻撃力を8〜24%、防御力を16〜48%上昇させる。"
+        },
+        {
+          "name": "リモートインパクト",
+          "desc": "通常攻撃のたびにランダムな敵1体に攻撃力の20〜28%のダメージを与える。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "シャドウズエヴェイジョン",
+          "desc": "味方部隊の通常攻撃による被ダメージを5〜25%、スキルによる被ダメージを6〜30%軽減する。"
+        },
+        {
+          "name": "クレセントアップリフト",
+          "desc": "知恵と技術を広め、味方全部隊の与ダメージを4〜20%上昇させる。"
+        },
+        {
+          "name": "エレメンタルレゾナンス",
+          "desc": "皆を高い親和状態へ導き、味方部隊のスキルダメージを5〜25%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "レネ",
+      "generation": 6,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "S",
+      "how_to_obtain": "ラッキールーレット",
+      "notes": "無敵状態・範囲ダメージ・被ダメージ軽減を兼ね備えたパワフルな槍兵。",
+      "best_use": "生存力の高い優秀な槍兵。SvSや集結で活躍。ゴードンと並行して投資する価値あり。",
+      "name_en": "Renee",
+      "exploration_skills": [
+        {
+          "name": "イリュージョンクラウド",
+          "desc": "レネが色鮮やかな球体を爆発させ、奇怪な雲を発生させて攻撃力の100〜140%の範囲ダメージを与え、1秒間敵を混乱させる。"
+        },
+        {
+          "name": "スターペイント",
+          "desc": "夢幻の絵の具を撒き散らし、攻撃力の50〜70%のダメージを与えると同時にスターマークを付与し、4秒間対象の被ダメージを2〜6%増加させる。"
+        },
+        {
+          "name": "ドリームビジョン",
+          "desc": "スターマークが付いた対象は逃れられず、攻撃力が8〜24%上昇し、マーク対象へのダメージが4〜12%増加する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ナイトメアトレース",
+          "desc": "味方部隊は2ターンごとに対象へドリームマークを付け、次のターンにランサーの与ダメージを40〜200%増加させる。"
+        },
+        {
+          "name": "ドリームキャッチャー",
+          "desc": "ドリームマークが弱点を露わにし、マーク対象への部隊ダメージを30〜150%増加させる。"
+        },
+        {
+          "name": "ドリームスライス",
+          "desc": "ドリームマークが弱点を晒し、マーク対象への味方全部隊の与ダメージを15〜75%増加させる。"
+        }
+      ]
+    },
+    {
+      "name": "ウェイン",
+      "generation": 6,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "デイリー割引・最強領主・英雄集結",
+      "notes": "第6世代の堅実な弓兵。",
+      "best_use": "堅実な弓兵の選択肢。サーバー日数がブランシュ解放間近なら待つのも手。",
+      "name_en": "Wayne",
+      "exploration_skills": [
+        {
+          "name": "ハリケーンブローバック",
+          "desc": "ウェインがブーメランを直線状に投げ、攻撃力の100〜140%の範囲ダメージと戻り時の追撃ダメージを与える。"
+        },
+        {
+          "name": "ファントムブリッツ",
+          "desc": "通常攻撃のたびに15〜35%の確率でもう一度通常攻撃が発動する。"
+        },
+        {
+          "name": "ヌーンタイム!",
+          "desc": "ウェインの正確な狙いにより、ダメージ発生時の会心率が3〜15%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "サンダーストライク",
+          "desc": "全部隊が4ターンごとに追加攻撃を行い、20〜100%のダメージを与える。"
+        },
+        {
+          "name": "ラウンダバウトヒット",
+          "desc": "マークスマンが2回に1回、敵ランサーに8〜40%、敵マークスマンに4〜20%の追加ダメージを与える。"
+        },
+        {
+          "name": "フリート",
+          "desc": "味方全部隊の攻撃に5〜25%の会心率を付与する。"
+        }
+      ]
+    },
+    {
+      "name": "ゴードン",
+      "generation": 7,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "A",
+      "how_to_obtain": "英雄殿堂・兵器工場ショップ",
+      "notes": "集結や熊狩行動で最強クラスの槍兵。毒スキルで槍兵ダメージを底上げ。",
+      "best_use": "集結最優秀の槍兵。毒効果で全槍兵のダメージを底上げ。熊狩行動に必須級。",
+      "name_en": "Gordon",
+      "exploration_skills": [
+        {
+          "name": "ポイズンブラスト",
+          "desc": "毒霧に変化する花瓶を投げ、0.5秒ごとに攻撃力の50〜70%のダメージを3秒間与え続ける。"
+        },
+        {
+          "name": "トキシックモロトフ",
+          "desc": "毒入りの薬瓶を投げつけ、0.5秒ごとに攻撃力の25〜35%のダメージを与え、2秒間被ダメージを5〜25%増加させる。"
+        },
+        {
+          "name": "トレラリゼーション",
+          "desc": "ゴードンの体が毒に適応し、防御力が25〜75%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ヴェノムインフュージョン",
+          "desc": "ランサーの武器に毒を塗り、2回攻撃ごとに20〜100%の追加ダメージを与えて1ターンの間毒を付与する。"
+        },
+        {
+          "name": "ケミカルテラー",
+          "desc": "毒を纏った武器がランサーの与ダメージを30〜150%上昇させ、3ターンごとに1ターンの間敵の与ダメージを6〜30%低下させる。"
+        },
+        {
+          "name": "トキシックリリース",
+          "desc": "生体毒の霧を発生させ敵歩兵を混乱させ、被ダメージを6〜30%増加させる。"
+        }
+      ]
+    },
+    {
+      "name": "エディス",
+      "generation": 7,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "A",
+      "how_to_obtain": "最強領主・氷原支配者・最強王国・デイリー割引・英雄集結・兵器工場ショップ",
+      "notes": "メカロボ「ミスター・ティン」を操縦する盾兵。部隊バフと防御に優れた集結援軍役。",
+      "best_use": "優秀な集結援軍。弓兵の防御を強化しつつ槍兵のダメージも上昇。戦場での存在感が非常に高い。",
+      "name_en": "Edith",
+      "exploration_skills": [
+        {
+          "name": "アイアンクラッドパンチ",
+          "desc": "ミスター・ティンが扇状範囲の敵全体を殴打し、攻撃力の100〜140%のダメージを与えて1秒間気絶させ、2秒間自身の攻撃力を20〜100%上昇させる。"
+        },
+        {
+          "name": "エスケープカプセル",
+          "desc": "HPが0になると、ミスター・ティンがエディスを脱出カプセルで放出して自爆し、周囲の敵に攻撃力の200〜280%のダメージを与える。"
+        },
+        {
+          "name": "プリエンプティブアラート",
+          "desc": "戦場の情報がミスター・ティンに危険を知らせ、10〜50%の確率で被ダメージを50%軽減する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ストラテジックバランス",
+          "desc": "ミスター・ティンの存在が後衛を守り、マークスマンの与ダメージを4〜20%軽減する代わりにランサーの与ダメージを4〜20%上昇させる。"
+        },
+        {
+          "name": "アイアンクラッド",
+          "desc": "ミスター・ティンの金属装甲により、歩兵の被ダメージを4〜20%軽減する。"
+        },
+        {
+          "name": "スティールセンチネル",
+          "desc": "可動防衛システムにより、味方全部隊のHPを5〜25%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "ブラッドリー",
+      "generation": 7,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "S",
+      "how_to_obtain": "ラッキールーレット・兵器工場ショップ",
+      "notes": "強力な範囲攻撃を持つ砲撃型弓兵。熊狩行動のスコア稼ぎに最適。",
+      "best_use": "最優秀のPvE弓兵。範囲攻撃で雑魚処理が速い。全部隊+30%ダメージバフ持ち。熊狩行動のスコアが大幅アップ。",
+      "name_en": "Bradley",
+      "exploration_skills": [
+        {
+          "name": "デストラクター",
+          "desc": "砲撃で攻撃力の300〜420%の範囲ダメージを与える。"
+        },
+        {
+          "name": "インセンディアリーシェル",
+          "desc": "砲弾を発射し、攻撃力の60〜84%の範囲ダメージを与え、炎上する着弾地点が追加ダメージを与える。"
+        },
+        {
+          "name": "オーダシャス",
+          "desc": "攻撃力が10〜26%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ベテランズマイト",
+          "desc": "戦闘経験により味方全部隊の攻撃力を5〜25%上昇させる。"
+        },
+        {
+          "name": "パワーショット",
+          "desc": "敵ランサーへのダメージを6〜30%、敵歩兵へのダメージを5〜25%上昇させる。"
+        },
+        {
+          "name": "タクティカルアシスタンス",
+          "desc": "4ターンごとに2ターンの間、味方全部隊に6〜30%の攻撃力上昇効果を与える。"
+        }
+      ]
+    },
+    {
+      "name": "ガト",
+      "generation": 8,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "A",
+      "how_to_obtain": "共通の欠片交換・ラッキールーレット・兵器工場ショップ",
+      "notes": "非常に硬いタンク型盾兵。守備側の集結防衛に最適。",
+      "best_use": "最優秀の守備型盾兵。シールドと反撃効果でとても硬い。集結防衛に最適。",
+      "name_en": "Gatot",
+      "exploration_skills": [
+        {
+          "name": "キングズリゾルヴ",
+          "desc": "決意のシールドを展開し、5秒間攻撃力の220〜380%相当のシールドを得る。"
+        },
+        {
+          "name": "ロイヤルオーソリティ",
+          "desc": "威厳ある存在感で敵英雄を威圧し、3秒間対象1体につき敵の攻撃力を1〜5%低下させ、自身の攻撃力を1〜5%上昇させる。"
+        },
+        {
+          "name": "リーガルダンス",
+          "desc": "3〜15%の確率で通常攻撃を回避し、会心率が4〜20%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ゴールデンガード",
+          "desc": "歩兵の防御力を6〜30%上昇させる。"
+        },
+        {
+          "name": "キングズベストーヴァル",
+          "desc": "偉大な王の祝福により、攻撃するたびに1ターンの間歩兵に攻撃力の6〜30%相当のシールドを付与する。"
+        },
+        {
+          "name": "ロイヤルレギオン",
+          "desc": "強大な軍勢により敵の攻撃力を5〜25%低下させる。"
+        }
+      ]
+    },
+    {
+      "name": "ヘンドリック",
+      "generation": 8,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S+",
+      "tier_exploration": "A",
+      "how_to_obtain": "英雄殿堂・兵器工場ショップ",
+      "notes": "深海の精霊を操る海軍の艦長。敵防御力を25%低下させる最強クラスの集結援軍役。",
+      "best_use": "最優秀の集結サポート役。敵全体の防御力-25%は非常に強力なダメージ増幅効果。",
+      "name_en": "Hendrik",
+      "exploration_skills": [
+        {
+          "name": "ソングオブアーリェ",
+          "desc": "深淵より古の霊を召喚し、範囲内の敵に攻撃力の220〜300%のダメージを与え、1.5秒間気絶させる。"
+        },
+        {
+          "name": "シンキングアンカー",
+          "desc": "驚異的な力で重い錨を投げつけ、範囲内の敵に攻撃力の100〜140%のダメージを与える。"
+        },
+        {
+          "name": "ランプレイズキス",
+          "desc": "他者から力を吸収し、敵を倒すたびにダメージが0.5〜2.5%上昇する(最大15重)。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ワームズラヴェージ",
+          "desc": "巨大な深海の虫を操り敵の装甲を蝕み、敵全部隊の防御力を5〜25%低下させる。"
+        },
+        {
+          "name": "アーマーオブバーナクルズ",
+          "desc": "4ターンごとに味方全部隊を硬い藤壺の殻で覆い、2ターンの間防御力を6〜30%上昇させる。"
+        },
+        {
+          "name": "ドラゴンズヘイア",
+          "desc": "3ターンごとに深淵の霊の末裔がマークスマンと共に攻撃し、敵全体に8〜40%のダメージを与える。"
+        }
+      ]
+    },
+    {
+      "name": "ソニヤ",
+      "generation": 8,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "S",
+      "how_to_obtain": "共通の欠片交換・最強領主・氷原支配者・最強王国・デイリー割引・英雄集結・兵器工場ショップ",
+      "notes": "氷を操る堕ちた女王。凍結と範囲ダメージが優秀な制御型槍兵。",
+      "best_use": "優秀な制御型槍兵。凍結と範囲ダメージが強力。第9世代でも通用する性能。",
+      "name_en": "Sonya",
+      "exploration_skills": [
+        {
+          "name": "エクストリームコールド",
+          "desc": "冷凍ガスを噴射し、対象を1.5秒間凍結させ、対象と周囲の敵に攻撃力の220〜300%の範囲ダメージを与える。"
+        },
+        {
+          "name": "フローズンボム",
+          "desc": "凍結爆弾を発射し、敵に攻撃力の100〜140%のダメージを与え、3秒間周囲の敵の攻撃速度を50%低下させる。"
+        },
+        {
+          "name": "マネーハングリー",
+          "desc": "賞金への執着心により攻撃力が10〜30%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "トレジャーハンター",
+          "desc": "ソニアの約束が皆を鼓舞し、味方全部隊のダメージを4〜20%上昇させる。"
+        },
+        {
+          "name": "バウンティテンプテーション",
+          "desc": "ランサーが2回攻撃するごとに15〜75%の追加ダメージを与え、1ターンの間味方全部隊の攻撃力を5〜25%上昇させる。"
+        },
+        {
+          "name": "トレンシャルインパクト",
+          "desc": "ランサーが5ターンごとに50〜250%のダメージを与え、1ターン対象を気絶させる。"
+        }
+      ]
+    },
+    {
+      "name": "マグヌス",
+      "generation": 9,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "S+",
+      "tier_expedition": "S",
+      "tier_exploration": "S+",
+      "how_to_obtain": "英雄殿堂",
+      "notes": "最強クラスの盾兵。ダメージ・バフ・デバフすべてに優れ終盤まで活躍。",
+      "best_use": "最優秀の盾兵。第9世代以降で最強クラス。",
+      "name_en": "Magnus",
+      "exploration_skills": [
+        {
+          "name": "フローズンフューリー",
+          "desc": "マグナスが怒りの咆哮を上げ、敵全体を挑発しつつ3秒間攻撃力の50〜70%のダメージを継続して与える。"
+        },
+        {
+          "name": "ウィンドトマホーク",
+          "desc": "回転するトマホークを投げ、経路上の敵に攻撃力の150〜210%のダメージを与える。"
+        },
+        {
+          "name": "サンダラー",
+          "desc": "マグナスの猛攻により、3秒間敵の防御力を5〜25%低下させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ラパシャス",
+          "desc": "野生の飢餓感により歩兵の与ダメージを20〜100%上昇させる。"
+        },
+        {
+          "name": "アイアンファランクス",
+          "desc": "歩兵は3ターンごとに1ターンの間、攻撃力の6〜30%相当のシールドを得る。"
+        },
+        {
+          "name": "アイスマン",
+          "desc": "極寒に鍛えられた戦士により歩兵の被ダメージを3〜15%軽減する。"
+        }
+      ]
+    },
+    {
+      "name": "フレッド",
+      "generation": 9,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "ラッキールーレット",
+      "notes": "シールドと燃焼効果を持つ火属性の槍兵。アリーナや遠征で活躍。",
+      "best_use": "優秀なサポート槍兵。アリーナや遠征で最も活躍。",
+      "name_en": "Fred",
+      "exploration_skills": [
+        {
+          "name": "ブレイジングチャージ",
+          "desc": "炎に包まれて突撃し、攻撃力の200〜280%のダメージを与え、1.5秒間敵を気絶させる。"
+        },
+        {
+          "name": "インフェルノシールド",
+          "desc": "最もHPの少ない味方の周囲に炎の障壁を作り、3秒間攻撃力の100〜140%分のダメージを吸収する。"
+        },
+        {
+          "name": "ファイアーストームストライク",
+          "desc": "通常攻撃時に10〜30%の確率で攻撃力の50%相当の追加炎ダメージを与える。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "アシッドレイン",
+          "desc": "腐食性の豪雨により、4ターンごとに2ターンの間敵全部隊の被ダメージを3〜15%増加させる。"
+        },
+        {
+          "name": "ウォーターキャノン",
+          "desc": "ランサーが3ターンごとに20〜100%の追加ダメージを与え、1ターンの間敵の攻撃力を5〜25%低下させる。"
+        },
+        {
+          "name": "スコーチドアース",
+          "desc": "戦場を焼き払い、3ターンごとに敵全体に10〜50%のダメージを与える。"
+        }
+      ]
+    },
+    {
+      "name": "シュラ",
+      "generation": 9,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "S",
+      "how_to_obtain": "最強領主・氷原支配者・最強王国・デイリー割引",
+      "notes": "癒しの舞と高火力を兼ね備えた弓兵。無課金でも鋳造ショップから入手しやすい。",
+      "best_use": "最優先の集結リーダー。回復と被ダメージ軽減を持つ。鋳造ショップ経由で無課金にも優しい。",
+      "name_en": "Xura",
+      "exploration_skills": [
+        {
+          "name": "ディヴァインダンス",
+          "desc": "神聖な舞を舞い、味方全英雄のHPを攻撃力の150〜210%分回復させ、3秒間被ダメージを10〜50%軽減する。"
+        },
+        {
+          "name": "ウィンドショットバラージ",
+          "desc": "風を纏った矢の一斉射撃で攻撃力の200〜280%の範囲ダメージを与える。"
+        },
+        {
+          "name": "テンペストマーク",
+          "desc": "対象に嵐の刻印を付け、4秒間被ダメージを5〜15%増加させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "スポアインフェクション",
+          "desc": "感染性の胞子により敵全部隊の攻撃力を5〜25%低下させる。"
+        },
+        {
+          "name": "ファンガルヴェール",
+          "desc": "防御性の胞子により味方全部隊の被ダメージを4〜20%軽減する。"
+        },
+        {
+          "name": "ストームスナイパー",
+          "desc": "風の導きによりマークスマンの与ダメージを20〜100%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "ブランシュ",
+      "generation": 10,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "S+",
+      "tier_expedition": "S+",
+      "tier_exploration": "S+",
+      "how_to_obtain": "ラッキールーレット・兵器工場ショップ",
+      "notes": "ゲーム最高クラスの火力を誇る弓兵。ステータスが高く無課金でも入手しやすい。",
+      "best_use": "ゲーム最強の弓兵。全モードで高いダメージを発揮。無課金でも入手可能。解放され次第優先投資。",
+      "name_en": "Blanchette",
+      "exploration_skills": [
+        {
+          "name": "トリプルブランダーバス",
+          "desc": "強力な三連射で、扇状範囲の敵にそれぞれ攻撃力の100〜140%のダメージを与える。"
+        },
+        {
+          "name": "スキャッターショット",
+          "desc": "連射攻撃で複数の対象に攻撃力の50〜70%のダメージを5回与える。"
+        },
+        {
+          "name": "レッドパースート",
+          "desc": "低HPの敵を狙い、HPが50%以下の敵に10〜30%の追加ダメージを与える。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "アームドトゥザティース",
+          "desc": "高度な武装によりマークスマンの与ダメージを20〜100%上昇させる。"
+        },
+        {
+          "name": "ブラッドハンター",
+          "desc": "執拗な追撃により、味方全部隊の負傷した敵への与ダメージを5〜25%上昇させる。"
+        },
+        {
+          "name": "クリムゾンスナイパー",
+          "desc": "精密射撃により味方全部隊の会心率を4〜20%、会心ダメージを10〜50%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "グレゴリー",
+      "generation": 10,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "最強領主・氷原支配者・最強王国・デイリー割引・英雄集結・兵器工場ショップ",
+      "notes": "太陽軍団の守護者。倒れた後も味方をバフする盾兵。",
+      "best_use": "倒れた後も味方をバフする堅実な盾兵。",
+      "name_en": "Gregory",
+      "exploration_skills": [
+        {
+          "name": "ソードオブザマウンテン",
+          "desc": "剣を叩きつけて衝撃波を起こし、攻撃力の200〜280%の範囲ダメージを与える。"
+        },
+        {
+          "name": "パリーシールド",
+          "desc": "防御姿勢を取り、3秒間10〜50%の確率で被ダメージを50%軽減する。"
+        },
+        {
+          "name": "サクリフィシャルウィル",
+          "desc": "戦闘不能になった際、その犠牲が味方を鼓舞し、5秒間全味方の攻撃力を10〜30%上昇させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ヒドゥンタレンツ",
+          "desc": "歩兵が隠れた力を引き出し、4ターンごとに2ターンの間与ダメージを10〜50%上昇させる。"
+        },
+        {
+          "name": "インスパイアリングヴァラー",
+          "desc": "グレゴリーの勇気が味方を鼓舞し、味方全部隊の攻撃力を5〜25%上昇させる。"
+        },
+        {
+          "name": "ディフェンシブラインズ",
+          "desc": "堅固な陣形により歩兵の被ダメージを4〜20%軽減する。"
+        }
+      ]
+    },
+    {
+      "name": "フレイヤ",
+      "generation": 10,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "A",
+      "tier_exploration": "S",
+      "how_to_obtain": "英雄殿堂・兵器工場ショップ",
+      "notes": "鎖を操る「夜の復讐者」。高い burst ダメージと敵の制御が可能な槍兵。",
+      "best_use": "最優秀の探検向け槍兵。マークした敵へのダメージが周囲に拡散する。",
+      "name_en": "Freya",
+      "exploration_skills": [
+        {
+          "name": "チェインサンダー",
+          "desc": "鎖で敵を打ち据え、攻撃力の180〜252%のダメージを与えて対象にマークを付け、ダメージを周囲の敵に波及させる。"
+        },
+        {
+          "name": "ブラッドムーンサイズ",
+          "desc": "大鎌の薙ぎ払いで、血月の力を宿した攻撃力の220〜300%の範囲ダメージを与える。"
+        },
+        {
+          "name": "クリスタルフューリー",
+          "desc": "怒りが力へと結晶化し、4秒間攻撃力と攻撃速度が10〜30%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ナイツヴェンジェンス",
+          "desc": "闇の力により歩兵とマークスマンの被ダメージを3〜15%軽減し、与ダメージを3〜15%上昇させる。"
+        },
+        {
+          "name": "チェインリアクション",
+          "desc": "マークされた敵はランサーから20〜100%の追加ダメージを受け、そのダメージが周囲の敵に10〜50%波及する。"
+        },
+        {
+          "name": "ルナーブレッシング",
+          "desc": "月の祝福により味方全部隊の与ダメージを5〜25%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "エリオノーラ",
+      "generation": 11,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "ラッキールーレット・兵器工場ショップ",
+      "notes": "炎の盾を持つ王家の盾兵。被ダメージの30%を反射できる。",
+      "best_use": "被ダメージ30%を反射するタンク。対象の防御力を下げるハンマー攻撃も強力。",
+      "name_en": "Eleonora",
+      "exploration_skills": [
+        {
+          "name": "シールドオブブレイズ",
+          "desc": "燃え盛るシールドを展開し、3秒間攻撃力の200〜280%分のダメージを吸収し、10〜30%を反射する。"
+        },
+        {
+          "name": "ヘヴィーハンマーストライク",
+          "desc": "強烈なハンマーの一撃で攻撃力の250〜350%のダメージを与え、3秒間対象の防御力を10〜30%低下させる。"
+        },
+        {
+          "name": "リーガルサンクション",
+          "desc": "王家の威光により、4秒間攻撃力を5〜15%上昇させ、被ダメージを5〜15%軽減する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "マジェスティックコロナ",
+          "desc": "王家の祝福により味方全部隊のHPを5〜25%上昇させる。"
+        },
+        {
+          "name": "スコーチングサン",
+          "desc": "灼熱の光が4ターンごとに敵全体に10〜50%のダメージを与える。"
+        },
+        {
+          "name": "ロイヤルデクリー",
+          "desc": "歩兵を鼓舞し、与ダメージを20〜100%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "ロイド",
+      "generation": 11,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "S",
+      "tier_exploration": "A",
+      "how_to_obtain": "最強領主・氷原支配者・最強王国・デイリー割引・英雄集結・兵器工場ショップ",
+      "notes": "からくり鳩と爆弾を操る職人肌の槍兵。殺傷力（Lethality）特化。",
+      "best_use": "殺傷力（Lethality）特化。槍兵の攻撃力を150%上昇させる爆弾スキルを持つ。",
+      "name_en": "Lloyd",
+      "exploration_skills": [
+        {
+          "name": "ラピッドボンバードメント",
+          "desc": "機械仕掛けのカッコウを展開して敵を爆撃し、攻撃力の60〜84%のダメージを5回与える。"
+        },
+        {
+          "name": "プラクティスドパーフェクション",
+          "desc": "熟練の技術により攻撃力が10〜30%、会心率が5〜15%上昇する。"
+        },
+        {
+          "name": "ウィークネスフォーカス",
+          "desc": "敵の弱点を分析し、HPが50%以下の対象へのダメージを5〜15%上昇させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "バードインベイジョン",
+          "desc": "機械の鳥が敵を妨害し、敵の脅威度を4〜20%低下させる。"
+        },
+        {
+          "name": "アイスフレアボム",
+          "desc": "強力な爆弾により、3ターンごとに1ターンの間ランサーの攻撃力を30〜150%上昇させる。"
+        },
+        {
+          "name": "インジーニアスマスタリー",
+          "desc": "巧妙な工学技術により、味方全部隊の脅威度を10〜50%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "ルーファス",
+      "generation": 11,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "S",
+      "how_to_obtain": "英雄殿堂・兵器工場ショップ",
+      "notes": "爆弾と燃焼効果を持つ反乱傭兵。最強クラスの範囲ダメージ弓兵。",
+      "best_use": "最優秀の範囲ダメージ弓兵。盾兵ダメージ+60%と敵被ダメージ+25%を同時に付与。",
+      "name_en": "Rufus",
+      "exploration_skills": [
+        {
+          "name": "スターフォールインパクト",
+          "desc": "隕石を落とし、攻撃力の200〜280%の範囲ダメージを与え、3秒間敵を炎上させる。"
+        },
+        {
+          "name": "スプリンターブラスト",
+          "desc": "爆発物の破片で対象に攻撃力の100〜140%、周囲の敵に攻撃力の50〜70%のダメージを与える。"
+        },
+        {
+          "name": "スコーチングブレッツ",
+          "desc": "焼夷弾により通常攻撃に10〜30%の炎上ダメージを追加する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "アーマークラッシュ",
+          "desc": "徹甲弾により、4ターンごとに2ターンの間歩兵の与ダメージを12〜60%上昇させ、対象の被ダメージを5〜25%増加させる。"
+        },
+        {
+          "name": "ラースフルクエイク",
+          "desc": "地震爆弾により敵の脅威度を10〜50%低下させる。"
+        },
+        {
+          "name": "インフェルノレジメント",
+          "desc": "燃え盛る士気によりマークスマンの与ダメージを20〜100%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "ヘルヴィル",
+      "generation": 12,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "S+",
+      "tier_expedition": "S+",
+      "tier_exploration": "S",
+      "how_to_obtain": "英雄殿堂・兵器工場ショップ",
+      "notes": "サスラの族長。CC耐性と盾兵ダメージ軽減を兼ね備えた最強クラスの盾兵。",
+      "best_use": "最優秀の盾兵。スタン・凍結耐性と盾兵の被ダメージ軽減・与ダメージ強化を兼備。",
+      "name_en": "Hervor",
+      "exploration_skills": [
+        {
+          "name": "アースムーバー",
+          "desc": "凄まじい力で地面を叩きつけ、攻撃力の250〜350%の範囲ダメージを与え、1.5秒間敵を気絶させる。"
+        },
+        {
+          "name": "マウンテンストレングス",
+          "desc": "山のような体躯により防御力が15〜45%、HPが10〜30%上昇する。"
+        },
+        {
+          "name": "ストーンアームズ",
+          "desc": "腕が石と化し、気絶・凍結を無効化し、4秒間被ダメージを5〜25%軽減する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "コールフォーブラッド",
+          "desc": "雄叫びにより味方全部隊の与ダメージを5〜25%上昇させる。"
+        },
+        {
+          "name": "アンダイイング",
+          "desc": "不屈の精神により歩兵の被ダメージを6〜30%軽減する。"
+        },
+        {
+          "name": "バトルサースティ",
+          "desc": "戦いへの渇望により歩兵の与ダメージを20〜100%上昇させ、被ダメージを4〜20%軽減する。"
+        }
+      ]
+    },
+    {
+      "name": "カロール",
+      "generation": 12,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "A",
+      "how_to_obtain": "ラッキールーレット・兵器工場ショップ",
+      "notes": "イーグル軍団の騎兵隊長。槍兵・盾兵特攻を持つ最強クラスの攻撃型槍兵。",
+      "best_use": "最優秀の攻撃型槍兵。槍兵特攻+30%、盾兵特攻+25%。全部隊の被ダメージも軽減。",
+      "name_en": "Karol",
+      "exploration_skills": [
+        {
+          "name": "ドーンチャージ",
+          "desc": "夜明けの騎馬突撃を敢行し、攻撃力の220〜300%のダメージを与え、4秒間攻撃力を10〜30%上昇させる。"
+        },
+        {
+          "name": "ブリスリングストライク",
+          "desc": "槍の一撃で攻撃力の150〜210%のダメージを与え、3秒間敵の防御力を10〜30%低下させる。"
+        },
+        {
+          "name": "ソアリングヴィクトリー",
+          "desc": "敵を撃破するたびに攻撃力が2〜6%上昇する(最大10重)。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "インザウィングス",
+          "desc": "戦略的な位置取りにより味方全部隊の被ダメージを4〜20%軽減する。"
+        },
+        {
+          "name": "シールドブレイカー",
+          "desc": "徹甲戦術により敵ランサーへのダメージを6〜30%、敵歩兵へのダメージを5〜25%上昇させる。"
+        },
+        {
+          "name": "スタンダードオブエイジズ",
+          "desc": "由緒ある軍旗により味方全部隊の攻撃力を5〜25%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "ライジーア",
+      "generation": 12,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "S",
+      "how_to_obtain": "最強領主・氷原支配者・最強王国・デイリー割引・英雄集結・兵器工場ショップ",
+      "notes": "メカ蜘蛛の女王。召喚とダメージ反射を持つ第12世代最強クラスの弓兵。",
+      "best_use": "第12世代最強のDPS。メカ蜘蛛が敵攻撃力を低下させ、弓兵の追加ダメージも付与。",
+      "name_en": "Ligeia",
+      "exploration_skills": [
+        {
+          "name": "メックスパイダーズアタック",
+          "desc": "メカ蜘蛛を展開して敵を攻撃し、攻撃力の60〜84%のダメージを5回与え、対象の攻撃力を5〜25%低下させる。"
+        },
+        {
+          "name": "スティールウェブ",
+          "desc": "鋼鉄の蜘蛛の巣で敵を1.5秒間拘束し、10〜30%のダメージを反射する。"
+        },
+        {
+          "name": "クイーンプロテクションモード",
+          "desc": "防衛プロトコルを起動し、4秒間被ダメージを10〜30%軽減し、攻撃速度を10〜30%上昇させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "マークスメンスパイダーサポート",
+          "desc": "蜘蛛型ドローンがマークスマンを支援し、2回攻撃するごとに20〜100%の追加ダメージを与える。"
+        },
+        {
+          "name": "スパイダートキシンアローズ",
+          "desc": "毒矢により、3ターンごとに2ターンの間対象の被ダメージを5〜25%増加させる。"
+        },
+        {
+          "name": "ディフェンスリダクション",
+          "desc": "腐食性の毒により敵全部隊の防御力を5〜25%低下させる。"
+        }
+      ]
+    },
+    {
+      "name": "ギーゼラ",
+      "generation": 13,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "A",
+      "tier_expedition": "A",
+      "tier_exploration": "A",
+      "how_to_obtain": "最強領主・氷原支配者・最強王国・デイリー割引・英雄集結・兵器工場ショップ",
+      "notes": "メカアームとエネルギーシールドを操る機械技師の盾兵。",
+      "best_use": "エネルギー式シールドを持つ守備型盾兵。",
+      "name_en": "Gisela",
+      "exploration_skills": [
+        {
+          "name": "スーパーロード",
+          "desc": "ギゼラが機械腕を過負荷駆動させ、4秒間攻撃速度を20〜60%、防御力を50〜150%上昇させる。"
+        },
+        {
+          "name": "メックアームスマッシュ",
+          "desc": "機械の拳による強力な一撃で攻撃力の200〜280%のダメージを与え、1秒間気絶させる。"
+        },
+        {
+          "name": "ミニシールド",
+          "desc": "エネルギーが100に達すると、3秒間攻撃力の70〜190%分のダメージを吸収するシールドを展開する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ディフェンシブスカベンジング",
+          "desc": "回収した部品により歩兵の防御力を6〜30%上昇させる。"
+        },
+        {
+          "name": "エナジーファシリティ",
+          "desc": "発電施設により味方全部隊の攻撃力を5〜25%上昇させる。"
+        },
+        {
+          "name": "オートタレット",
+          "desc": "自動防衛装置が3ターンごとに敵に10〜50%のダメージを与える。"
+        }
+      ]
+    },
+    {
+      "name": "フローラ",
+      "generation": 13,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "A",
+      "tier_exploration": "S+",
+      "how_to_obtain": "兵器工場ショップ",
+      "notes": "つるや猛毒の花を操る植物学者。2秒のスタンを持つ最強クラスの探検向け槍兵。",
+      "best_use": "最優秀の探検向け槍兵。2秒スタンの範囲攻撃と敵英雄への継続ダメージが強力。",
+      "name_en": "Flora",
+      "exploration_skills": [
+        {
+          "name": "エンヴェロップメント",
+          "desc": "絡みつく蔦を召喚し、攻撃力の180〜252%の範囲ダメージを与えて2秒間敵を気絶させる。"
+        },
+        {
+          "name": "ローズブルーム",
+          "desc": "敵英雄を狙う食虫のアドリアローズを召喚し、5秒間1秒ごとに攻撃力の100〜140%のダメージを与える。"
+        },
+        {
+          "name": "ネイチャーズストレングス",
+          "desc": "自然の力を借り、攻撃力が10〜30%上昇し、毎秒HPが1〜3%回復する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "エンマイアリングヴァインズ",
+          "desc": "絡みつく蔦により、10〜50%の確率で敵の被ダメージを10〜50%増加させる。"
+        },
+        {
+          "name": "プランテージ",
+          "desc": "生きた植物が4ターンごとに味方部隊の最大HPの5〜25%を回復させる。"
+        },
+        {
+          "name": "コンフュージョンポーレン",
+          "desc": "幻覚性の花粉により敵の攻撃力を5〜25%低下させる。"
+        }
+      ]
+    },
+    {
+      "name": "ウルカヌス",
+      "generation": 13,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "S+",
+      "tier_expedition": "S+",
+      "tier_exploration": "A",
+      "how_to_obtain": "ラッキールーレット・兵器工場ショップ",
+      "notes": "地下都市のハンター。全攻撃に出血効果を付与する最強クラスの集結援軍役弓兵。",
+      "best_use": "最優秀の集結援軍弓兵。全攻撃が出血付与。槍兵・盾兵の防御を60%低下させつつ弓兵攻撃力を60%上昇。",
+      "name_en": "Vulcanus",
+      "exploration_skills": [
+        {
+          "name": "チェインドダート",
+          "desc": "鎖付きの投げ矢を放ち、攻撃力の180〜252%のダメージを与えて対象を引き寄せ、3秒間出血を付与する。"
+        },
+        {
+          "name": "レイジイントゥリゾルヴ",
+          "desc": "怒りを集中力に変え、4秒間会心率を10〜30%、会心ダメージを20〜60%上昇させる。"
+        },
+        {
+          "name": "テラータクティクス",
+          "desc": "威嚇により敵の攻撃力を5〜15%低下させ、被ダメージを5〜15%増加させる。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "アーセナルエンパワーメント",
+          "desc": "優れた武装によりマークスマンの攻撃力を12〜60%上昇させ、敵歩兵・ランサーの防御力を12〜60%低下させる。"
+        },
+        {
+          "name": "アーマーピアシング",
+          "desc": "徹甲弾により、味方全部隊の高防御対象への与ダメージを10〜50%上昇させる。"
+        },
+        {
+          "name": "ブリーディングエッジ",
+          "desc": "すべての攻撃に出血を付与し、2ターンの間毎ターン2〜10%の追加ダメージを与える。"
+        }
+      ]
+    },
+    {
+      "name": "エリーフ",
+      "generation": 14,
+      "hero_class": "盾兵",
+      "rarity": "SSR",
+      "tier_overall": "S+",
+      "tier_expedition": "S+",
+      "tier_exploration": "S",
+      "how_to_obtain": "ラッキールーレット・兵器工場ショップ",
+      "notes": "高い回避率と混乱付与を持つ幻想的な踊り子。最強クラスの回避型タンク。",
+      "best_use": "最優秀の回避型タンク。「幽体滑走」で混乱付与＋回避30%。全体の敵攻撃力を低下させるスキルも持つ。",
+      "name_en": "Elif",
+      "exploration_skills": [
+        {
+          "name": "スペクトラルグライド",
+          "desc": "幻影のように敵の間を滑り抜け、攻撃力の150〜210%のダメージを与え、3秒間回避率が10〜30%上昇する。"
+        },
+        {
+          "name": "ブレードダンス",
+          "desc": "剣を舞わせる幻惑の一撃で攻撃力の200〜280%の範囲ダメージを与え、1.5秒間敵を混乱させる。"
+        },
+        {
+          "name": "エセリアルステップス",
+          "desc": "幽玄な身のこなしにより、永続的に回避率が5〜15%、攻撃速度が5〜15%上昇する。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "シャックリングヴェール",
+          "desc": "幽玄なヴェールにより敵全部隊の攻撃力を5〜25%低下させる。"
+        },
+        {
+          "name": "スラッシュフォーメーション",
+          "desc": "連携した剣技により歩兵の与ダメージを20〜100%上昇させる。"
+        },
+        {
+          "name": "エンチャンティングタペストリー",
+          "desc": "織り込まれた魔法により、3ターンごとに歩兵に攻撃力の6〜30%相当のシールドを付与する。"
+        }
+      ]
+    },
+    {
+      "name": "ドミニク",
+      "generation": 14,
+      "hero_class": "槍兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "S",
+      "tier_exploration": "S",
+      "how_to_obtain": "最強領主・氷原支配者・最強王国・デイリー割引・英雄集結・兵器工場ショップ",
+      "notes": "箱と炎のバラを操る奇術師。戦闘中1度だけ復活する固有能力を持つ。",
+      "best_use": "固有の復活能力を持つ。「二重の悪戯」で戦闘中1度だけHPを回復して復活。",
+      "name_en": "Dominic",
+      "exploration_skills": [
+        {
+          "name": "ボックストリック",
+          "desc": "敵を魔法の箱に閉じ込め、攻撃力の200〜280%の範囲ダメージを与えて1.5秒間気絶させる。"
+        },
+        {
+          "name": "スコーチングローズ",
+          "desc": "燃え盛る薔薇を呼び出し、0.5秒ごとに周囲の敵へ攻撃力の60〜84%のダメージを3秒間与え続ける。"
+        },
+        {
+          "name": "ダブルトラブル",
+          "desc": "戦闘不能になった際、HPを30〜50%回復して復活する(戦闘中1回のみ発動)。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "ミスティックメカニズム",
+          "desc": "魔法の仕掛けによりランサーの与ダメージを20〜100%上昇させる。"
+        },
+        {
+          "name": "スパイキーアサルト",
+          "desc": "隠された棘が3ターンごとに敵へ10〜50%のダメージを与える。"
+        },
+        {
+          "name": "ミラーメイズ",
+          "desc": "幻影により歩兵とマークスマンの被ダメージを3〜15%軽減し、与ダメージを3〜15%上昇させる。"
+        }
+      ]
+    },
+    {
+      "name": "カーラ",
+      "generation": 14,
+      "hero_class": "弓兵",
+      "rarity": "SSR",
+      "tier_overall": "S",
+      "tier_expedition": "A",
+      "tier_exploration": "S",
+      "how_to_obtain": "兵器工場ショップ",
+      "notes": "蒸気機関のガトリング砲とガス攻撃を操る弓兵。最強クラスの範囲ダメージ役。",
+      "best_use": "最優秀の範囲ダメージ弓兵。「アーケイン・ブラスト」で範囲280%ダメージ。",
+      "name_en": "Cara",
+      "exploration_skills": [
+        {
+          "name": "アーケインブラスト",
+          "desc": "強力な魔導砲撃を放ち、攻撃力の200〜280%の範囲ダメージを与える。"
+        },
+        {
+          "name": "グルーミーミスト",
+          "desc": "毒霧を放出し、敵の命中率を10〜30%低下させ、3秒間炎上ダメージを与える。"
+        },
+        {
+          "name": "ハートフェルトフレンドシップ",
+          "desc": "味方が倒れるたびに攻撃力が5〜15%上昇する(最大4重)。"
+        }
+      ],
+      "expedition_skills": [
+        {
+          "name": "スモーキーエンカウンター",
+          "desc": "煙幕により敵の会心率を4〜20%低下させる。"
+        },
+        {
+          "name": "メックペット",
+          "desc": "機械の相棒により味方全部隊の通常攻撃ダメージを6〜30%上昇させる。"
+        },
+        {
+          "name": "ウィッチズラース",
+          "desc": "暗黒の怒りによりマークスマンの与ダメージを20〜100%上昇させる。"
+        }
+      ]
+    }
+  ],
+  "tier_descriptions": {
+    "S+": "メタを定義する最強クラス。多くの世代を通じて通用し、常に最優先で投資する価値がある。",
+    "S": "その兵種を代表する優秀な英雄。優先度の高い投資対象。",
+    "A": "その世代では非常に優秀。良い投資先だが、後により上位の英雄に交代する可能性あり。",
+    "B": "良英雄。他に良い選択肢がない場合に採用。投資は最小限に。",
+    "C": "平均的。可能であれば交代を推奨。投資は最小限に。",
+    "D": "戦力としては弱い。資源投資は避け、最終手段としてのみ使用。"
+  },
+  "class_info": {
+    "盾兵": {
+      "description": "前衛のタンク役。高い防御力とHPを持つ。",
+      "color": "#E74C3C"
+    },
+    "弓兵": {
+      "description": "後方からの火力役。高い攻撃力を持つ。",
+      "color": "#3498DB"
+    },
+    "槍兵": {
+      "description": "バランス型の戦闘役。攻撃力と機動力に優れる。",
+      "color": "#2ECC71"
+    }
+  },
+  "rarity_colors": {
+    "R": "#3498DB",
+    "SR": "#9B59B6",
+    "SSR": "#F1C40F"
+  },
+  "source": {
+    "repo": "https://github.com/StrainReviews/wos-optimizer",
+    "file": "data/heroes.json"
+  }
+}
+</script>
+
+<script>
+const raw = JSON.parse(document.getElementById('hero-data').textContent);
+const heroes = raw.heroes;
+const classColors = { '盾兵': '#E74C3C', '弓兵': '#3498DB', '槍兵': '#2ECC71' };
+const rarityColors = raw.rarity_colors || { R: '#3498DB', SR: '#9B59B6', SSR: '#F1C40F' };
+const tierColors = { 'S+': '#FF3B6E', 'S': '#F1C40F', 'A': '#4FC3F7', 'B': '#7FD37F', 'C': '#B0B8C1', 'D': '#7A8794' };
+
+let selected = new Set();
+
+function populateGenFilter() {
+  const gens = [...new Set(heroes.map(h => h.generation))].sort((a,b)=>a-b);
+  const sel = document.getElementById('genFilter');
+  gens.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = '第' + g + '世代';
+    sel.appendChild(opt);
+  });
+}
+
+function tierRank(t) {
+  const order = ['S+','S','A','B','C','D'];
+  return order.indexOf(t);
+}
+
+function getFiltered() {
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const gen = document.getElementById('genFilter').value;
+  const cls = document.getElementById('classFilter').value;
+  const rar = document.getElementById('rarityFilter').value;
+  const tier = document.getElementById('tierFilter').value;
+  const sortBy = document.getElementById('sortBy').value;
+
+  let list = heroes.filter(h => {
+    if (q && !h.name.toLowerCase().includes(q)) return false;
+    if (gen && String(h.generation) !== gen) return false;
+    if (cls && h.hero_class !== cls) return false;
+    if (rar && h.rarity !== rar) return false;
+    if (tier && h.tier_overall !== tier) return false;
+    return true;
+  });
+
+  if (sortBy === 'tier') list.sort((a,b) => tierRank(a.tier_overall) - tierRank(b.tier_overall) || a.name.localeCompare(b.name));
+  else if (sortBy === 'name') list.sort((a,b) => a.name.localeCompare(b.name));
+  else if (sortBy === 'gen') list.sort((a,b) => a.generation - b.generation || a.name.localeCompare(b.name));
+
+  return list;
+}
+
+function render() {
+  const list = getFiltered();
+  const grid = document.getElementById('heroGrid');
+  grid.innerHTML = '';
+  document.getElementById('countLabel').textContent = list.length + ' 体表示中（全 ' + heroes.length + ' 体）';
+
+  list.forEach(h => {
+    const card = document.createElement('div');
+    card.className = 'card' + (selected.has(h.name) ? ' selected' : '');
+    card.innerHTML = `
+      <div class="checkbox-indicator">${selected.has(h.name) ? '✓' : ''}</div>
+      <div class="card-top">
+        <span class="name">${h.name}</span>
+        <span class="tier" style="background:${tierColors[h.tier_overall] || '#888'}">${h.tier_overall}</span>
+      </div>
+      <div class="meta">第${h.generation}世代 ・ ${h.rarity}</div>
+      <div style="margin-bottom:6px;">
+        <span class="class-tag" style="background:${classColors[h.hero_class] || '#888'}">${h.hero_class}</span>
+      </div>
+      <div class="notes">${h.notes || ''}</div>
+    `;
+    card.addEventListener('click', () => toggleSelect(h.name));
+    grid.appendChild(card);
+  });
+}
+
+function toggleSelect(name) {
+  if (selected.has(name)) selected.delete(name);
+  else {
+    if (selected.size >= 4) { alert('比較は最大4体までです'); return; }
+    selected.add(name);
+  }
+  renderTray();
+  render();
+}
+
+function renderTray() {
+  const tray = document.getElementById('compareTray');
+  const chips = document.getElementById('trayChips');
+  chips.innerHTML = '';
+  if (selected.size === 0) { tray.classList.add('empty'); return; }
+  tray.classList.remove('empty');
+  selected.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'tray-chip';
+    chip.innerHTML = `${name} <button data-name="${name}">✕</button>`;
+    chip.querySelector('button').addEventListener('click', (e) => {
+      e.stopPropagation();
+      selected.delete(name);
+      renderTray();
+      render();
+    });
+    chips.appendChild(chip);
+  });
+}
+
+function openCompareModal() {
+  if (selected.size < 1) { alert('比較・詳細表示するヒーローを選んでください'); return; }
+  const list = heroes.filter(h => selected.has(h.name));
+  const skillsHtml = (list, key) => list.map(s => `<div class="skill-line"><span class="skill-name">${s.name}</span>${s.desc}</div>`).join('');
+
+  const rows = [
+    ['兵種', h => h.hero_class],
+    ['レアリティ', h => h.rarity],
+    ['世代', h => '第' + h.generation + '世代'],
+    ['総合ティア', h => h.tier_overall],
+    ['遠征ティア', h => h.tier_expedition],
+    ['探検ティア', h => h.tier_exploration],
+    ['入手方法', h => h.how_to_obtain || '-'],
+    ['解説', h => h.notes || '-'],
+    ['推奨用途', h => h.best_use || '-'],
+    ['探検スキル', h => skillsHtml(h.exploration_skills || [])],
+    ['遠征スキル', h => skillsHtml(h.expedition_skills || [])],
+  ];
+
+  let html = '<div class="table-scroll"><table><thead><tr><th>項目</th>';
+  list.forEach(h => html += `<td class="hero-col-name">${h.name}</td>`);
+  html += '</tr></thead><tbody>';
+  rows.forEach(([label, fn]) => {
+    html += `<tr><th>${label}</th>`;
+    list.forEach(h => html += `<td>${fn(h)}</td>`);
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Mobile-friendly stacked card view (one card per hero, no horizontal scrolling needed)
+  let cardsHtml = '<div class="compare-cards-view">';
+  list.forEach(h => {
+    cardsHtml += `
+      <div class="compare-hero-card">
+        <div class="ch-head">
+          <h3>${h.name}</h3>
+          <span class="tier" style="background:${tierColors[h.tier_overall] || '#888'}">${h.tier_overall}</span>
+        </div>
+        <div class="ch-meta">
+          <span class="class-tag" style="background:${classColors[h.hero_class] || '#888'}">${h.hero_class}</span>
+          ${h.rarity} ・ 第${h.generation}世代
+        </div>
+        <div class="ch-field">
+          <div class="ch-label">遠征ティア / 探検ティア</div>
+          <div class="ch-tiers">
+            <span class="tier-chip" style="background:${tierColors[h.tier_expedition] || '#888'}">遠征 ${h.tier_expedition}</span>
+            <span class="tier-chip" style="background:${tierColors[h.tier_exploration] || '#888'}">探検 ${h.tier_exploration}</span>
+          </div>
+        </div>
+        <div class="ch-field">
+          <div class="ch-label">入手方法</div>
+          <div class="ch-value">${h.how_to_obtain || '-'}</div>
+        </div>
+        <div class="ch-field">
+          <div class="ch-label">解説</div>
+          <div class="ch-value">${h.notes || '-'}</div>
+        </div>
+        <div class="ch-field">
+          <div class="ch-label">推奨用途</div>
+          <div class="ch-value">${h.best_use || '-'}</div>
+        </div>
+        <div class="ch-field">
+          <div class="ch-label">探検スキル</div>
+          <div class="ch-value">${skillsHtml(h.exploration_skills || [])}</div>
+        </div>
+        <div class="ch-field">
+          <div class="ch-label">遠征スキル</div>
+          <div class="ch-value">${skillsHtml(h.expedition_skills || [])}</div>
+        </div>
+      </div>
+    `;
+  });
+  cardsHtml += '</div>';
+
+  document.getElementById('compareTableWrap').innerHTML = html + cardsHtml;
+  document.getElementById('compareModalTitle').textContent = list.length === 1 ? '英雄詳細' : '英雄比較';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+document.getElementById('searchBox').addEventListener('input', render);
+document.getElementById('genFilter').addEventListener('change', render);
+document.getElementById('classFilter').addEventListener('change', render);
+document.getElementById('rarityFilter').addEventListener('change', render);
+document.getElementById('tierFilter').addEventListener('change', render);
+document.getElementById('sortBy').addEventListener('change', render);
+document.getElementById('clearTray').addEventListener('click', () => { selected.clear(); renderTray(); render(); });
+document.getElementById('openCompare').addEventListener('click', openCompareModal);
+document.getElementById('closeModal').addEventListener('click', () => document.getElementById('modalOverlay').classList.remove('open'));
+document.getElementById('modalOverlay').addEventListener('click', (e) => { if (e.target.id === 'modalOverlay') e.currentTarget.classList.remove('open'); });
+
+populateGenFilter();
+render();
+</script>
+
+</body>
+</html>
