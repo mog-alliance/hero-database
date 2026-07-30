@@ -6,9 +6,9 @@
 <style>
   :root {
     --bg: #000000;
-    --panel: #17222e;
-    --panel2: #1e2c3a;
-    --border: #2a3b4d;
+    --panel: #121212;
+    --panel2: #1c1c1c;
+    --border: #2e2e2e;
     --text: #e8eef4;
     --muted: #93a4b5;
     --accent: #4fc3f7;
@@ -58,7 +58,7 @@
     transition: border-color .15s, transform .1s;
   }
   .card:hover { border-color: var(--accent); }
-  .card.selected { border-color: var(--accent); background: #17324a; }
+  .card.selected { border-color: var(--accent); background: #16323f; }
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
   .name { font-weight: 600; font-size: 15px; }
   .tier {
@@ -102,7 +102,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: #101b26;
+    background: #0a0a0a;
     border-top: 1px solid var(--border);
     padding: 10px 20px;
     display: flex;
@@ -216,6 +216,18 @@
     .modal { padding: 14px; max-height: 92vh; }
     .toolbar { padding: 10px; }
   }
+  .gear-name { font-weight: 700; font-size: 13px; color: #F1C40F; margin-bottom: 6px; }
+  .modal-filter-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .filter-tab {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .filter-tab.active { background: var(--accent); color: #0f1720; border-color: var(--accent); font-weight: 600; }
   .skill-line { margin-bottom: 8px; line-height: 1.5; }
   .skill-line:last-child { margin-bottom: 0; }
   .skill-name { display: block; font-weight: 700; color: var(--accent); font-size: 12px; margin-bottom: 1px; }
@@ -284,6 +296,11 @@
     <div class="modal-header">
       <strong id="compareModalTitle">英雄比較</strong>
       <button class="btn secondary" id="closeModal">閉じる ✕</button>
+    </div>
+    <div class="modal-filter-tabs" id="modalFilterTabs">
+      <button class="filter-tab active" data-mode="all">すべて</button>
+      <button class="filter-tab" data-mode="expedition">遠征のみ</button>
+      <button class="filter-tab" data-mode="exploration">探検のみ</button>
     </div>
     <div id="compareTableWrap"></div>
   </div>
@@ -771,7 +788,18 @@ fetch(); // placeholder, real data injected below
           "name": "エキスパートソードマンシップ",
           "desc": "剣術の心得により、4ターンごとに2ターンの間、味方全部隊の与ダメージが6〜30%上昇する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "暁の刃",
+      "mythic_gear_exploration": {
+        "name": "剣盾",
+        "desc": "攻撃時に、剣気が盾となってジェロニモを守り、自身の被ダメージを30%低下させる",
+        "gear_name": "暁の刃"
+      },
+      "mythic_gear_expedition": {
+        "name": "真実の術",
+        "desc": "剣陣を組んで攻撃を仕掛け、集結部隊の攻撃力を15%上昇させる。",
+        "gear_name": "暁の刃"
+      }
     },
     {
       "name": "ナタリア",
@@ -812,7 +840,18 @@ fetch(); // placeholder, real data injected below
           "name": "コールオブザワイルド",
           "desc": "自然とのつながりの力で、味方全部隊の与ダメージを5〜25%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "狂風を操る者",
+      "mythic_gear_exploration": {
+        "name": "一心",
+        "desc": "ナタリアと白熊が心を1つにする。与ダメージが30%上昇する。",
+        "gear_name": "狂風を操る者"
+      },
+      "mythic_gear_expedition": {
+        "name": "不敗の軍",
+        "desc": "ナタリアが獣の群れを召喚する。集結部隊の殺傷力が15%上昇する。",
+        "gear_name": "狂風を操る者"
+      }
     },
     {
       "name": "ジャスミン",
@@ -853,7 +892,18 @@ fetch(); // placeholder, real data injected below
           "name": "ユースフルレイジ",
           "desc": "怒れるモリーの恐ろしさにより、味方全部隊の与ダメージを5〜25%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "雪の精霊",
+      "mythic_gear_exploration": {
+        "name": "改造発射機",
+        "desc": "雪玉発射機を改良し、自身の与ダメージを30%上昇させる",
+        "gear_name": "雪の精霊"
+      },
+      "mythic_gear_expedition": {
+        "name": "雪の庇護",
+        "desc": "雪の庇護により、バリケード駐在部隊の殺傷力を15%上昇させる",
+        "gear_name": "雪の精霊"
+      }
     },
     {
       "name": "ジンマン",
@@ -894,7 +944,18 @@ fetch(); // placeholder, real data injected below
           "name": "ポジショナルバッター",
           "desc": "ジンマンの防衛戦術により、ガリソンでの被ダメージを4〜20%軽減する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "キツツキ",
+      "mythic_gear_exploration": {
+        "name": "高圧力釘銃",
+        "desc": "圧力釘銃が過負荷モードに移行し、攻撃を24%上昇させる",
+        "gear_name": "キツツキ"
+      },
+      "mythic_gear_expedition": {
+        "name": "攻撃は最大の防御",
+        "desc": "攻撃型櫓を築き上げ、バリケード駐在部隊の攻撃を15%上昇させる",
+        "gear_name": "キツツキ"
+      }
     },
     {
       "name": "フリント",
@@ -935,7 +996,18 @@ fetch(); // placeholder, real data injected below
           "name": "イモレーション",
           "desc": "フリントの破壊的な炎の力で、味方全部隊の脅威度を5〜25%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "グラウルング",
+      "mythic_gear_exploration": {
+        "name": "復讐狂熱",
+        "desc": "憎しみは戦意の燃料でもある。“怒りの火”発動後、攻撃力が戦闘終了まで24%上昇する",
+        "gear_name": "グラウルング"
+      },
+      "mythic_gear_expedition": {
+        "name": "龍の吐息",
+        "desc": "バリケード防御用の火炎放射器を改良し、バリケード駐在部隊の攻撃を15%上昇させる",
+        "gear_name": "グラウルング"
+      }
     },
     {
       "name": "フレンダー",
@@ -976,7 +1048,18 @@ fetch(); // placeholder, real data injected below
           "name": "エナジャイジングショット",
           "desc": "フィリーの特殊な一撃が兵士たちの集中力を高め、味方全部隊に40%の確率で被ダメージを10〜50%軽減する効果を付与する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "神秘の薬典",
+      "mythic_gear_exploration": {
+        "name": "エキス抽出",
+        "desc": "フレンダーは薬剤からエキスを抽出し、治療効果を強化する。これによりHPを回復するスキルの効果が70%上昇する",
+        "gear_name": "神秘の薬典"
+      },
+      "mythic_gear_expedition": {
+        "name": "緊急訓練",
+        "desc": "フレンダーが簡単な救護の技術を仲間に伝授した為、都市を防御する部隊のHPが15%上昇した",
+        "gear_name": "神秘の薬典"
+      }
     },
     {
       "name": "アロンゾ",
@@ -1017,7 +1100,18 @@ fetch(); // placeholder, real data injected below
           "name": "ポイズンハープーン",
           "desc": "毒の塗料により、味方部隊に50%の確率で与ダメージが10〜50%増加する効果を付与する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "エイハブ船長",
+      "mythic_gear_exploration": {
+        "name": "深海の饗宴",
+        "desc": "アロンゾは戦利品を惜しまない。通常攻撃の度に美味しそうな魚が、自軍のHPが最も低い英雄をアロンゾの攻撃力*15%分回復させる",
+        "gear_name": "エイハブ船長"
+      },
+      "mythic_gear_expedition": {
+        "name": "銛強化",
+        "desc": "アロンゾは武器のレベルを上げ、集結部隊の与ダメージを15%上昇させる",
+        "gear_name": "エイハブ船長"
+      }
     },
     {
       "name": "ローガン",
@@ -1058,7 +1152,18 @@ fetch(); // placeholder, real data injected below
           "name": "リーダーインスピレーション",
           "desc": "鼓舞するリーダーシップにより、味方全部隊の防御力を4〜20%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "鋼鉄の拳",
+      "mythic_gear_exploration": {
+        "name": "鉄拳強化",
+        "desc": "鉄拳をアップグレードし威力を向上させる。自身の与ダメージが30%上昇",
+        "gear_name": "鋼鉄の拳"
+      },
+      "mythic_gear_expedition": {
+        "name": "鉄腕の守り",
+        "desc": "強力な鉄拳で都市を守り、防衛部隊防御力が15%上昇する。",
+        "gear_name": "鋼鉄の拳"
+      }
     },
     {
       "name": "ミア",
@@ -1099,7 +1204,18 @@ fetch(); // placeholder, real data injected below
           "name": "リチュアルデサイファリング",
           "desc": "戦闘前に危険を予見し、味方全部隊に40%の確率で被ダメージを10〜50%軽減する効果を付与する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "運命水晶",
+      "mythic_gear_exploration": {
+        "name": "真実の眼",
+        "desc": "ミアの「変動」効果のある全スキルの変動上限と下限がそれぞれ150%上昇。",
+        "gear_name": "運命水晶"
+      },
+      "mythic_gear_expedition": {
+        "name": "宿命の集結",
+        "desc": "集結部隊の攻撃力が15%上昇する",
+        "gear_name": "運命水晶"
+      }
     },
     {
       "name": "グレッグ",
@@ -1140,7 +1256,18 @@ fetch(); // placeholder, real data injected below
           "name": "ローアンドオーダー",
           "desc": "法と秩序への信念により、味方全部隊のHPを5〜25%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "王国法典",
+      "mythic_gear_exploration": {
+        "name": "法廷秩序",
+        "desc": "ターゲットは5秒間スキル使用不可（発動済スキルには影響しない）。ターゲットに攻撃力*300%のダメージを与える",
+        "gear_name": "王国法典"
+      },
+      "mythic_gear_expedition": {
+        "name": "正義のラッパ",
+        "desc": "正義と信念の名目で大軍を招集する。集結部隊のHPが15%上昇する。",
+        "gear_name": "王国法典"
+      }
     },
     {
       "name": "アクモス",
@@ -1181,7 +1308,18 @@ fetch(); // placeholder, real data injected below
           "name": "ブレイドオブライト",
           "desc": "フレイムクリスタルで歩兵の武器を強化し、1ターンの間攻撃ごとのダメージを12〜60%、対象の被ダメージを5〜25%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "守護者の遺物",
+      "mythic_gear_exploration": {
+        "name": "不屈の信念",
+        "desc": "アクモスは強い信念で戦友に影響を与える。「クトゥグアの加護」を受けた味方の攻撃力が42%上昇する。2.5秒持続。",
+        "gear_name": "守護者の遺物"
+      },
+      "mythic_gear_expedition": {
+        "name": "守護者の誓い",
+        "desc": "守護者の決意で都市を固く守り、防衛部隊のHPが15%上昇する。",
+        "gear_name": "守護者の遺物"
+      }
     },
     {
       "name": "レイナ",
@@ -1222,7 +1360,18 @@ fetch(); // placeholder, real data injected below
           "name": "シャドウブレード",
           "desc": "ランサーが25%の確率で追加攻撃を行い、攻撃力の120〜200%のダメージを与える。"
         }
-      ]
+      ],
+      "mythic_gear_name": "忍刀・雷切",
+      "mythic_gear_exploration": {
+        "name": "残影一撃",
+        "desc": "通常攻撃時、40%の確率でクナイを追加で1本投げ、攻撃力*45%のダメージを与える。",
+        "gear_name": "忍刀・雷切"
+      },
+      "mythic_gear_expedition": {
+        "name": "炎の如き略奪",
+        "desc": "レイナの必殺の好機を掴む能力は非常に高い。集結部隊の殺傷力15%を上昇させる。",
+        "gear_name": "忍刀・雷切"
+      }
     },
     {
       "name": "リオン",
@@ -1263,7 +1412,18 @@ fetch(); // placeholder, real data injected below
           "name": "オーナイカデンツァ",
           "desc": "マークスマンの攻撃力が3回攻撃するごとに1〜5%上昇し、戦闘終了まで重複する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "エラの涙",
+      "mythic_gear_exploration": {
+        "name": "エラの挽歌",
+        "desc": "「シドラク戦歌」を発動後、自身の攻撃力が15%上昇する。戦闘終了まで持続。",
+        "gear_name": "エラの涙"
+      },
+      "mythic_gear_expedition": {
+        "name": "イラノンの執念",
+        "desc": "リオンが故郷をしのぶ詩で防衛部隊の戦意を引き出す。彼らの殺傷力が15%上昇する。",
+        "gear_name": "エラの涙"
+      }
     },
     {
       "name": "ヘクトー",
@@ -1304,7 +1464,18 @@ fetch(); // placeholder, real data injected below
           "name": "ブリッツ",
           "desc": "攻撃時に25%の確率で120〜200%のダメージを与える。"
         }
-      ]
+      ],
+      "mythic_gear_name": "鋼刃戦刃",
+      "mythic_gear_exploration": {
+        "name": "血の舞",
+        "desc": "剣先の火花が戦意に火をつけ、鋼刃戦舞の持続時間を1.5秒延長する。その間、自身のHPを与ダメージの15%回復。",
+        "gear_name": "鋼刃戦刃"
+      },
+      "mythic_gear_expedition": {
+        "name": "難攻不落",
+        "desc": "ヘクトーが有利な地形を最大限利用して侵入者を殺傷し、防衛部隊の攻撃力が15%上昇する。",
+        "gear_name": "鋼刃戦刃"
+      }
     },
     {
       "name": "ノラ",
@@ -1345,7 +1516,18 @@ fetch(); // placeholder, real data injected below
           "name": "モメンタム",
           "desc": "ランサーが5回攻撃するごとに2ターンの間、味方全部隊の与ダメージを5〜25%上昇させ、被ダメージを5〜25%軽減する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "雪原の放浪者",
+      "mythic_gear_exploration": {
+        "name": "震撼手榴弾",
+        "desc": "雷の猛攻を放った際に投げつけた手榴弾にショック効果を付与し、35%の確率でターゲットを眩暈状態にする。1秒間持続。",
+        "gear_name": "雪原の放浪者"
+      },
+      "mythic_gear_expedition": {
+        "name": "冷静沈着",
+        "desc": "ノラは常に冷静沈着であり、危機に直面しても慌てない。彼女の激励によって防衛部隊の防御力が15%上昇する。",
+        "gear_name": "雪原の放浪者"
+      }
     },
     {
       "name": "グエン",
@@ -1386,7 +1568,18 @@ fetch(); // placeholder, real data injected below
           "name": "カーペットボンビング",
           "desc": "定期的に範囲爆撃を行い、敵全体にダメージを与える。"
         }
-      ]
+      ],
+      "mythic_gear_name": "希望の翼",
+      "mythic_gear_exploration": {
+        "name": "協力攻撃",
+        "desc": "グエンの装備には精巧に設計された自動サブ武器がある。スキル発動時に毎回、その武器が自動でランダムなターゲットを射撃し、グエンの攻撃力*70%のダメージ（英雄優先）を与える。",
+        "gear_name": "希望の翼"
+      },
+      "mythic_gear_expedition": {
+        "name": "ストライカー",
+        "desc": "グエンは急襲戦術に精通している。彼女のこの長所により、集結部隊の殺傷力が15%上昇する。",
+        "gear_name": "希望の翼"
+      }
     },
     {
       "name": "ジェシー",
@@ -1464,7 +1657,18 @@ fetch(); // placeholder, real data injected below
           "name": "エレメンタルレゾナンス",
           "desc": "皆を高い親和状態へ導き、味方部隊のスキルダメージを5〜25%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "降龍棒",
+      "mythic_gear_exploration": {
+        "name": "武学宗師",
+        "desc": "無名の武技が達人の領域に達し、与ダメージが30%上昇する。",
+        "gear_name": "降龍棒"
+      },
+      "mythic_gear_expedition": {
+        "name": "経絡浄化",
+        "desc": "無名の訓練により、防衛部隊は鋼のような意志と体力を獲得する。彼らの防御力が15%上昇する。",
+        "gear_name": "降龍棒"
+      }
     },
     {
       "name": "レネ",
@@ -1505,7 +1709,18 @@ fetch(); // placeholder, real data injected below
           "name": "ドリームスライス",
           "desc": "ドリームマークが弱点を晒し、マーク対象への味方全部隊の与ダメージを15〜75%増加させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "マジカルカラーボール",
+      "mythic_gear_exploration": {
+        "name": "幻の夢",
+        "desc": "混乱の粉末を鋼の針に塗布し、攻撃時に8%の確率でターゲットを1秒間混乱させる。混乱状態の敵は周囲のターゲットを無差別に攻撃する。",
+        "gear_name": "マジカルカラーボール"
+      },
+      "mythic_gear_expedition": {
+        "name": "美しい幻想",
+        "desc": "レネは見事なパフォーマンスを見せて士気を鼓舞する。結集した部隊の攻撃力が15%上昇する。",
+        "gear_name": "マジカルカラーボール"
+      }
     },
     {
       "name": "ウェイン",
@@ -1546,7 +1761,18 @@ fetch(); // placeholder, real data injected below
           "name": "フリート",
           "desc": "味方全部隊の攻撃に5〜25%の会心率を付与する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "パワーブーメラン",
+      "mythic_gear_exploration": {
+        "name": "銃闘術",
+        "desc": "ウェインは射撃と体術を完璧に組み合わせ、瞬時に5連射撃を繰り出す。ランダムなターゲットに攻撃力の*56%のダメージを与える。対象が護衛の場合、100%の確率で即死させる。",
+        "gear_name": "パワーブーメラン"
+      },
+      "mythic_gear_expedition": {
+        "name": "先手必勝",
+        "desc": "ウェインは防衛施設を利用した先制攻撃を熟知している。その戦術の効果により、城の守備部隊の殺傷力が15%上昇する。",
+        "gear_name": "パワーブーメラン"
+      }
     },
     {
       "name": "ゴードン",
@@ -1587,7 +1813,18 @@ fetch(); // placeholder, real data injected below
           "name": "トキシックリリース",
           "desc": "生体毒の霧を発生させ敵歩兵を混乱させ、被ダメージを6〜30%増加させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "蝕骨の毒",
+      "mythic_gear_exploration": {
+        "name": "1325号薬剤",
+        "desc": "ゴードンが入念に調合した劇毒により、彼の与ダメージが25％上昇し、毒を付与したターゲットの攻撃力を15%低下させる。",
+        "gear_name": "蝕骨の毒"
+      },
+      "mythic_gear_expedition": {
+        "name": "毒の侵略",
+        "desc": "特製の劇毒装備を使用した盟友は、その集結部隊の殺傷力が15％上昇する。",
+        "gear_name": "蝕骨の毒"
+      }
     },
     {
       "name": "エディス",
@@ -1628,7 +1865,18 @@ fetch(); // placeholder, real data injected below
           "name": "スティールセンチネル",
           "desc": "可動防衛システムにより、味方全部隊のHPを5〜25%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "仁愛工具箱",
+      "mythic_gear_exploration": {
+        "name": "小さなエンジニア",
+        "desc": "エディスはMr.Tinのケアに当たる。HPが50%以下になった際、即座に一定のHPを回復する(最大HPの>35％相当)。さらに戦闘終了まで防御力が30％上昇する。各戦闘で1回のみ発動。",
+        "gear_name": "仁愛工具箱"
+      },
+      "mythic_gear_expedition": {
+        "name": "堅固な工事",
+        "desc": "エディスとMr.Tinが共に築いた防御システムは防衛部隊をさらに強化する。彼らのHPが15％上昇する。",
+        "gear_name": "仁愛工具箱"
+      }
     },
     {
       "name": "ブラッドリー",
@@ -1669,7 +1917,18 @@ fetch(); // placeholder, real data injected below
           "name": "タクティカルアシスタンス",
           "desc": "4ターンごとに2ターンの間、味方全部隊に6〜30%の攻撃力上昇効果を与える。"
         }
-      ]
+      ],
+      "mythic_gear_name": "雷霆重砲",
+      "mythic_gear_exploration": {
+        "name": "集中砲火",
+        "desc": "耳をつんざくような大砲の轟音は敵を威圧するだけでなく、味方の士気をも高める！「破壊重砲」を発射すると、味方の英雄と護衛の攻撃速度が14%上昇する。5秒持続。",
+        "gear_name": "雷霆重砲"
+      },
+      "mythic_gear_expedition": {
+        "name": "精密な布陣",
+        "desc": "攻城のプロとして、ブラッドリーはどのような防衛線が攻城側を思い悩ませるか熟知している。彼が敷いた防衛線により防衛部隊の攻撃力が15％上昇する。",
+        "gear_name": "雷霆重砲"
+      }
     },
     {
       "name": "ガト",
@@ -1710,7 +1969,18 @@ fetch(); // placeholder, real data injected below
           "name": "ロイヤルレギオン",
           "desc": "強大な軍勢により敵の攻撃力を5〜25%低下させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "黄金の牙",
+      "mythic_gear_exploration": {
+        "name": "列王の懲戒",
+        "desc": "王の威厳を踏みにじる者は必ず制裁を受ける！列王の意志は追加で攻撃力*95％のシールド値を獲得する。シールド発動中は被ダメージの30%を反射する。",
+        "gear_name": "黄金の牙"
+      },
+      "mythic_gear_expedition": {
+        "name": "不滅の城",
+        "desc": "勇気と戦意で不落の城を築く！防衛部隊の防御力が15％上昇する。",
+        "gear_name": "黄金の牙"
+      }
     },
     {
       "name": "ヘンドリック",
@@ -1751,7 +2021,18 @@ fetch(); // placeholder, real data injected below
           "name": "ドラゴンズヘイア",
           "desc": "3ターンごとに深淵の霊の末裔がマークスマンと共に攻撃し、敵全体に8〜40%のダメージを与える。"
         }
-      ]
+      ],
+      "mythic_gear_name": "深淵ダイバー",
+      "mythic_gear_exploration": {
+        "name": "ヒュドラの舞い",
+        "desc": "ルルイエの歌により召喚されたモンスターが消えた際、触手がその場に残り、付近の敵の攻撃を誘う。触手のHPはキャプテン・ヘンドリックの初期HPの30％。5秒存在する。",
+        "gear_name": "深淵ダイバー"
+      },
+      "mythic_gear_expedition": {
+        "name": "深淵の加護",
+        "desc": "深淵の古の生霊による加護で、集結部隊の攻撃力が15％上昇する。",
+        "gear_name": "深淵ダイバー"
+      }
     },
     {
       "name": "ソニヤ",
@@ -1792,7 +2073,18 @@ fetch(); // placeholder, real data injected below
           "name": "トレンシャルインパクト",
           "desc": "ランサーが5ターンごとに50〜250%のダメージを与え、1ターン対象を気絶させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "海蛙",
+      "mythic_gear_exploration": {
+        "name": "骨の髄まで凍る",
+        "desc": "ソニヤは冷凍液の配合を改良する。自身の攻撃力が24%上昇する。さらに、極度厳寒の凍結効果が終了した際、周囲に攻撃力*70%の砕氷ダメージを与える。",
+        "gear_name": "海蛙"
+      },
+      "mythic_gear_expedition": {
+        "name": "渦潮砲台",
+        "desc": "水柱を発射する防御砲台を設置する。防衛部隊の殺傷力が15%上昇する。",
+        "gear_name": "海蛙"
+      }
     },
     {
       "name": "マグヌス",
@@ -1833,7 +2125,18 @@ fetch(); // placeholder, real data injected below
           "name": "アイスマン",
           "desc": "極寒に鍛えられた戦士により歩兵の被ダメージを3〜15%軽減する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "嵐の斧",
+      "mythic_gear_exploration": {
+        "name": "勇者の血脈",
+        "desc": "氷海の勇者の血統はマグヌスに優れた体格を与えた。被ダメージを15%軽減し、氷海の怒風スキルの効果中、防御力が75%上昇する。",
+        "gear_name": "嵐の斧"
+      },
+      "mythic_gear_expedition": {
+        "name": "英霊の意志",
+        "desc": "英霊殿の古い伝説を引用して鼓舞し、防衛部隊のHPが15%上昇する。",
+        "gear_name": "嵐の斧"
+      }
     },
     {
       "name": "フレッド",
@@ -1874,7 +2177,18 @@ fetch(); // placeholder, real data injected below
           "name": "スコーチドアース",
           "desc": "戦場を焼き払い、3ターンごとに敵全体に10〜50%のダメージを与える。"
         }
-      ]
+      ],
+      "mythic_gear_name": "浴炎者",
+      "mythic_gear_exploration": {
+        "name": "烈火の英豪",
+        "desc": "戦歌を鎮めるという理想はフレッドに究極の名誉心を与えた。攻撃力が24%上昇し、強化効果を1つ消去する度に防御力が10%上昇する。5回まで重ね掛け可能、戦闘終了まで持続。",
+        "gear_name": "浴炎者"
+      },
+      "mythic_gear_expedition": {
+        "name": "英傑の鼓舞",
+        "desc": "フレッドの勇気と信念は全ての者に感銘を与え、集結部隊の攻撃力が15%上昇する。",
+        "gear_name": "浴炎者"
+      }
     },
     {
       "name": "シュラ",
@@ -1915,7 +2229,18 @@ fetch(); // placeholder, real data injected below
           "name": "ストームスナイパー",
           "desc": "風の導きによりマークスマンの与ダメージを20〜100%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "術師の仮面",
+      "mythic_gear_exploration": {
+        "name": "太古の戦歌",
+        "desc": "太古の戦歌で鼓舞し、攻撃力が最も高い味方の与ダメージが60%上昇する。4秒間持続。",
+        "gear_name": "術師の仮面"
+      },
+      "mythic_gear_expedition": {
+        "name": "大地の祝福",
+        "desc": "大地を讃える古き歌で鼓舞し、防衛部隊の攻撃力が15%上昇する。",
+        "gear_name": "術師の仮面"
+      }
     },
     {
       "name": "ブランシュ",
@@ -1956,7 +2281,18 @@ fetch(); // placeholder, real data injected below
           "name": "クリムゾンスナイパー",
           "desc": "精密射撃により味方全部隊の会心率を4〜20%、会心ダメージを10〜50%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "ウルフハンター",
+      "mythic_gear_exploration": {
+        "name": "赤紅の狂熱",
+        "desc": "熱狂的なブランシュの狩猟により、攻撃速度が30%上昇する。さらに緋紅の一閃による治療禁止効果が5秒延長する",
+        "gear_name": "ウルフハンター"
+      },
+      "mythic_gear_expedition": {
+        "name": "炎紅の雷霆",
+        "desc": "ブランシュの効率的な攻撃作戦により、集結部隊は灼熱の稲妻となって敵防衛線を引き裂き、殺傷力が15%上昇する",
+        "gear_name": "ウルフハンター"
+      }
     },
     {
       "name": "グレゴリー",
@@ -1997,7 +2333,18 @@ fetch(); // placeholder, real data injected below
           "name": "ディフェンシブラインズ",
           "desc": "堅固な陣形により歩兵の被ダメージを4〜20%軽減する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "灼陽巨剣",
+      "mythic_gear_exploration": {
+        "name": "意志の鎧",
+        "desc": "鋼鉄の鎧を纏ったグレゴリーの防御力が50%上昇する。意志が編まれた無形の鎧がグレゴリーをこの上なく頑強にし、眩暈、麻痺、凍結などの中断効果が無効になる",
+        "gear_name": "灼陽巨剣"
+      },
+      "mythic_gear_expedition": {
+        "name": "灼熱の堅城",
+        "desc": "勇気と決意は金城湯池に勝る！グレゴリーの鼓舞と指揮により、防衛部隊の殺傷力が15%上昇する",
+        "gear_name": "灼陽巨剣"
+      }
     },
     {
       "name": "フレイヤ",
@@ -2038,7 +2385,18 @@ fetch(); // placeholder, real data injected below
           "name": "ルナーブレッシング",
           "desc": "月の祝福により味方全部隊の与ダメージを5〜25%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "血月の悲哀",
+      "mythic_gear_exploration": {
+        "name": "闇夜の襲撃",
+        "desc": "過酷な訓練によってフレイヤの与ダメージが30%上昇する。また驚異的な洞察力と反応により、敵がユニットを召喚した際、そのユニットに対して攻撃力*300%のダメージを与える",
+        "gear_name": "血月の悲哀"
+      },
+      "mythic_gear_expedition": {
+        "name": "闇夜の見張り",
+        "desc": "フレイヤの目は決して怠ることはない。彼女の厳重な警戒により防衛部隊の防御力が15%上昇する",
+        "gear_name": "血月の悲哀"
+      }
     },
     {
       "name": "エリオノーラ",
@@ -2079,7 +2437,18 @@ fetch(); // placeholder, real data injected below
           "name": "ロイヤルデクリー",
           "desc": "歩兵を鼓舞し、与ダメージを20〜100%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "ソラリスの権力",
+      "mythic_gear_exploration": {
+        "name": "鉄槌と堅盾",
+        "desc": "亡命生活の中で会得した臨機応変の戦法。HPが50%以上の時、攻撃力が24%上昇。50%未満の時、防御力が75%上昇",
+        "gear_name": "ソラリスの権力"
+      },
+      "mythic_gear_expedition": {
+        "name": "最後の砦",
+        "desc": "エリオノーラは守城戦を常に最後の戦いだと考えている。防衛部隊に対する彼女の鼓舞と指揮により、防衛部隊のHPが15％上昇する",
+        "gear_name": "ソラリスの権力"
+      }
     },
     {
       "name": "ロイド",
@@ -2120,7 +2489,18 @@ fetch(); // placeholder, real data injected below
           "name": "インジーニアスマスタリー",
           "desc": "巧妙な工学技術により、味方全部隊の脅威度を10〜50%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "工匠の秘宝",
+      "mythic_gear_exploration": {
+        "name": "霜凍の吐息",
+        "desc": "ロボットカッコウが液体窒素を噴出し、弾丸に冷却効果を付与する。通常攻撃時に攻撃力*15%の追加ダメージを与え、ターゲットの攻撃速度を15%低下させる。2秒持続。効果は重複しない",
+        "gear_name": "工匠の秘宝"
+      },
+      "mythic_gear_expedition": {
+        "name": "鋼鉄の迷城",
+        "desc": "城壁に仕掛けを施して防衛戦を有利に運ぶ。防衛部隊の攻撃力が15%上昇する",
+        "gear_name": "工匠の秘宝"
+      }
     },
     {
       "name": "ルーファス",
@@ -2161,7 +2541,18 @@ fetch(); // placeholder, real data injected below
           "name": "インフェルノレジメント",
           "desc": "燃え盛る士気によりマークスマンの与ダメージを20〜100%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "燃焼隕石",
+      "mythic_gear_exploration": {
+        "name": "戦争の火",
+        "desc": "通常攻撃時に灼熱の弾丸を射出する。ターゲットを燃焼させ、攻撃力*30%のダメージを毎秒与える。2秒持続",
+        "gear_name": "燃焼隕石"
+      },
+      "mythic_gear_expedition": {
+        "name": "烈火旅団",
+        "desc": "ルーファスの不死鳥の旗の下、集結部隊が戦場で不滅の炎となる。攻撃力が15%上昇する",
+        "gear_name": "燃焼隕石"
+      }
     },
     {
       "name": "ヘルヴィル",
@@ -2202,7 +2593,18 @@ fetch(); // placeholder, real data injected below
           "name": "バトルサースティ",
           "desc": "戦いへの渇望により歩兵の与ダメージを20〜100%上昇させ、被ダメージを4〜20%軽減する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "サスラのハンマー",
+      "mythic_gear_exploration": {
+        "name": "先祖の栄光",
+        "desc": "歴代族長の戦鎚には、その意志も受け継がれている。栄光の力で攻撃速度が30%上昇、通常攻撃による「恐怖」の発生確率が25%上昇",
+        "gear_name": "サスラのハンマー"
+      },
+      "mythic_gear_expedition": {
+        "name": "フロストガード",
+        "desc": "ヘルヴィルの厳しい訓練は城壁の衛士を盤石の防壁へと変貌させる。防衛部隊の防御力が15%上昇",
+        "gear_name": "サスラのハンマー"
+      }
     },
     {
       "name": "カロール",
@@ -2243,7 +2645,18 @@ fetch(); // placeholder, real data injected below
           "name": "スタンダードオブエイジズ",
           "desc": "由緒ある軍旗により味方全部隊の攻撃力を5〜25%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "凛風の槍",
+      "mythic_gear_exploration": {
+        "name": "翼の戦歌",
+        "desc": "翼の端の振音が戦歌のように響く。ブレイクチャージ発動後、味方全体の攻撃速度が14%、移動速度が100%上昇。5秒間持続",
+        "gear_name": "凛風の槍"
+      },
+      "mythic_gear_expedition": {
+        "name": "フロックアサルト",
+        "desc": "熟練の指揮官として、カロールは大規模な部隊の進攻方法を熟知している。集結部隊の攻撃力が15%上昇",
+        "gear_name": "凛風の槍"
+      }
     },
     {
       "name": "ライジーア",
@@ -2284,7 +2697,18 @@ fetch(); // placeholder, real data injected below
           "name": "ディフェンスリダクション",
           "desc": "腐食性の毒により敵全部隊の防御力を5〜25%低下させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "運命の織り手",
+      "mythic_gear_exploration": {
+        "name": "スパイダー・クイーン",
+        "desc": "蜘蛛の巣を編んで群れを操る、卓越した戦闘術。戦闘開始毎にタランチュラを2匹自動召喚し、フェイトウェブが100%の確率で1体の追加ターゲットに命中する",
+        "gear_name": "運命の織り手"
+      },
+      "mythic_gear_expedition": {
+        "name": "ネストキャッスル",
+        "desc": "ライジーアの戦術により、城壁は獲物を捕らえる巨大な網となる。防衛部隊の殺傷力が15%上昇",
+        "gear_name": "運命の織り手"
+      }
     },
     {
       "name": "ギーゼラ",
@@ -2325,7 +2749,18 @@ fetch(); // placeholder, real data injected below
           "name": "オートタレット",
           "desc": "自動防衛装置が3ターンごとに敵に10〜50%のダメージを与える。"
         }
-      ]
+      ],
+      "mythic_gear_name": "ヘラクレス",
+      "mythic_gear_exploration": {
+        "name": "エナジー精錬",
+        "desc": "ギーゼラの改良によって精錬装置のエナジー効率がさらに高まる。通常攻撃毎の獲得エナジーが15上昇し、エナジーが100に達すると獲得するシールドが攻撃力*190%に上昇する",
+        "gear_name": "ヘラクレス"
+      },
+      "mythic_gear_expedition": {
+        "name": "自動砲台",
+        "desc": "防衛を固めるために全自動砲台を配備する。防衛部隊の攻撃力が15%上昇する",
+        "gear_name": "ヘラクレス"
+      }
     },
     {
       "name": "フローラ",
@@ -2366,7 +2801,18 @@ fetch(); // placeholder, real data injected below
           "name": "コンフュージョンポーレン",
           "desc": "幻覚性の花粉により敵の攻撃力を5〜25%低下させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "豊穣の種",
+      "mythic_gear_exploration": {
+        "name": "劇毒の花蔦",
+        "desc": "藤蔦とエイドリアローズに毒素を付与し、命中した敵に0.5秒毎に攻撃力*25%のダメージを与える。2秒間持続",
+        "gear_name": "豊穣の種"
+      },
+      "mythic_gear_expedition": {
+        "name": "自然の祝福",
+        "desc": "フローラが育てた神秘的な果実は、防衛部隊に信じられないほどの力を与える。防衛部隊のHPが15%増加する",
+        "gear_name": "豊穣の種"
+      }
     },
     {
       "name": "ウルカヌス",
@@ -2407,7 +2853,18 @@ fetch(); // placeholder, real data injected below
           "name": "ブリーディングエッジ",
           "desc": "すべての攻撃に出血を付与し、2ターンの間毎ターン2〜10%の追加ダメージを与える。"
         }
-      ]
+      ],
+      "mythic_gear_name": "滅びの軌跡",
+      "mythic_gear_exploration": {
+        "name": "鋭刃の矢",
+        "desc": "地下都市国家で随一の職人によって矢尻が改良され、ウルカヌスのすべての攻撃が敵に出血を引き起こす。さらに出血効果が強化され、0.5秒毎に攻撃力*20%のダメージを与える。3秒間持続",
+        "gear_name": "滅びの軌跡"
+      },
+      "mythic_gear_expedition": {
+        "name": "王者の威厳",
+        "desc": "ウルカヌスの威厳と指揮技術により、集結部隊の攻撃力が15%上昇する",
+        "gear_name": "滅びの軌跡"
+      }
     },
     {
       "name": "エリーフ",
@@ -2448,7 +2905,18 @@ fetch(); // placeholder, real data injected below
           "name": "エンチャンティングタペストリー",
           "desc": "織り込まれた魔法により、3ターンごとに歩兵に攻撃力の6〜30%相当のシールドを付与する。"
         }
-      ]
+      ],
+      "mythic_gear_name": "残月",
+      "mythic_gear_exploration": {
+        "name": "烈火の旋刃",
+        "desc": "即興の舞踏で次第に調子を上げる。エリーフの攻撃速度が20%、幻影の舞による敵への混乱付与確率が20%上昇する",
+        "gear_name": "残月"
+      },
+      "mythic_gear_expedition": {
+        "name": "守護の舞",
+        "desc": "華麗な舞踏で防衛部隊を鼓舞し、防御力を15%上昇させる",
+        "gear_name": "残月"
+      }
     },
     {
       "name": "ドミニク",
@@ -2489,7 +2957,18 @@ fetch(); // placeholder, real data injected below
           "name": "ミラーメイズ",
           "desc": "幻影により歩兵とマークスマンの被ダメージを3〜15%軽減し、与ダメージを3〜15%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "イマジナリーボックス",
+      "mythic_gear_exploration": {
+        "name": "マジックトリック",
+        "desc": "日々の研鑽によってドミニクのマジックは極限まで磨き上げられ、与ダメージが25%上昇する",
+        "gear_name": "イマジナリーボックス"
+      },
+      "mythic_gear_expedition": {
+        "name": "イマジンステージ",
+        "desc": "マジックと戦術の融合は、戦場を壮大な舞台に変える。集結部隊の殺傷力が15%上昇する",
+        "gear_name": "イマジナリーボックス"
+      }
     },
     {
       "name": "カーラ",
@@ -2530,7 +3009,18 @@ fetch(); // placeholder, real data injected below
           "name": "ウィッチズラース",
           "desc": "暗黒の怒りによりマークスマンの与ダメージを20〜100%上昇させる。"
         }
-      ]
+      ],
+      "mythic_gear_name": "ラピッドコメット",
+      "mythic_gear_exploration": {
+        "name": "科学＝魔法",
+        "desc": "オーストマンの職人がカーラの装備を改良する。「憂いの深霧」の持続時間が1秒延長、通常攻撃のダメージが25%上昇する",
+        "gear_name": "ラピッドコメット"
+      },
+      "mythic_gear_expedition": {
+        "name": "夕霧の城",
+        "desc": "都市はカーラの第二の故郷となった。背水の覚悟で守護部隊を鼓舞し、殺傷力を15%上昇させる",
+        "gear_name": "ラピッドコメット"
+      }
     }
   ],
   "tier_descriptions": {
@@ -2671,24 +3161,55 @@ function renderTray() {
   });
 }
 
+const skillsHtml = list => list.map(s => `<div class="skill-line"><span class="skill-name">${s.name}</span>${s.desc}</div>`).join('');
+const gearHtmlFull = h => {
+  if (!h.mythic_gear_name) return '-';
+  const parts = [`<div class="gear-name">${h.mythic_gear_name}</div>`];
+  if (h.mythic_gear_exploration) parts.push(`<div class="skill-line"><span class="skill-name">[探検] ${h.mythic_gear_exploration.name}</span>${h.mythic_gear_exploration.desc}</div>`);
+  if (h.mythic_gear_expedition) parts.push(`<div class="skill-line"><span class="skill-name">[遠征] ${h.mythic_gear_expedition.name}</span>${h.mythic_gear_expedition.desc}</div>`);
+  return parts.join('');
+};
+const gearHtmlExpedition = h => {
+  if (!h.mythic_gear_name || !h.mythic_gear_expedition) return '-';
+  return `<div class="gear-name">${h.mythic_gear_name}</div><div class="skill-line"><span class="skill-name">${h.mythic_gear_expedition.name}</span>${h.mythic_gear_expedition.desc}</div>`;
+};
+const gearHtmlExploration = h => {
+  if (!h.mythic_gear_name || !h.mythic_gear_exploration) return '-';
+  return `<div class="gear-name">${h.mythic_gear_name}</div><div class="skill-line"><span class="skill-name">${h.mythic_gear_exploration.name}</span>${h.mythic_gear_exploration.desc}</div>`;
+};
+
+// Each field is tagged 'all' | 'expedition' | 'exploration' so the modal filter tabs can narrow the view
+const FIELD_DEFS = [
+  ['兵種', h => h.hero_class, 'all'],
+  ['レアリティ', h => h.rarity, 'all'],
+  ['世代', h => '第' + h.generation + '世代', 'all'],
+  ['総合ティア', h => h.tier_overall, 'all'],
+  ['遠征ティア', h => h.tier_expedition, 'expedition'],
+  ['探検ティア', h => h.tier_exploration, 'exploration'],
+  ['入手方法', h => h.how_to_obtain || '-', 'all'],
+  ['解説', h => h.notes || '-', 'all'],
+  ['推奨用途', h => h.best_use || '-', 'all'],
+  ['探検スキル', h => skillsHtml(h.exploration_skills || []), 'exploration'],
+  ['遠征スキル', h => skillsHtml(h.expedition_skills || []), 'expedition'],
+  ['専用装備（探検）', h => gearHtmlExploration(h), 'exploration'],
+  ['専用装備（遠征）', h => gearHtmlExpedition(h), 'expedition'],
+];
+
+let compareFilterMode = 'all';
+let currentCompareList = [];
+
 function openCompareModal() {
   if (selected.size < 1) { alert('比較・詳細表示するヒーローを選んでください'); return; }
-  const list = heroes.filter(h => selected.has(h.name));
-  const skillsHtml = (list, key) => list.map(s => `<div class="skill-line"><span class="skill-name">${s.name}</span>${s.desc}</div>`).join('');
+  currentCompareList = heroes.filter(h => selected.has(h.name));
+  compareFilterMode = 'all';
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === 'all'));
+  renderCompareContent();
+  document.getElementById('modalOverlay').classList.add('open');
+}
 
-  const rows = [
-    ['兵種', h => h.hero_class],
-    ['レアリティ', h => h.rarity],
-    ['世代', h => '第' + h.generation + '世代'],
-    ['総合ティア', h => h.tier_overall],
-    ['遠征ティア', h => h.tier_expedition],
-    ['探検ティア', h => h.tier_exploration],
-    ['入手方法', h => h.how_to_obtain || '-'],
-    ['解説', h => h.notes || '-'],
-    ['推奨用途', h => h.best_use || '-'],
-    ['探検スキル', h => skillsHtml(h.exploration_skills || [])],
-    ['遠征スキル', h => skillsHtml(h.expedition_skills || [])],
-  ];
+function renderCompareContent() {
+  const list = currentCompareList;
+  const rows = FIELD_DEFS.filter(([, , type]) => compareFilterMode === 'all' || type === 'all' || type === compareFilterMode);
 
   let html = '<div class="table-scroll"><table><thead><tr><th>項目</th>';
   list.forEach(h => html += `<td class="hero-col-name">${h.name}</td>`);
@@ -2703,6 +3224,35 @@ function openCompareModal() {
   // Mobile-friendly stacked card view (one card per hero, no horizontal scrolling needed)
   let cardsHtml = '<div class="compare-cards-view">';
   list.forEach(h => {
+    const tierLine = compareFilterMode === 'exploration'
+      ? `<span class="tier-chip" style="background:${tierColors[h.tier_exploration] || '#888'}">探検 ${h.tier_exploration}</span>`
+      : compareFilterMode === 'expedition'
+      ? `<span class="tier-chip" style="background:${tierColors[h.tier_expedition] || '#888'}">遠征 ${h.tier_expedition}</span>`
+      : `<span class="tier-chip" style="background:${tierColors[h.tier_expedition] || '#888'}">遠征 ${h.tier_expedition}</span>
+         <span class="tier-chip" style="background:${tierColors[h.tier_exploration] || '#888'}">探検 ${h.tier_exploration}</span>`;
+
+    const fieldBlock = (label, value) => value === undefined ? '' : `
+        <div class="ch-field">
+          <div class="ch-label">${label}</div>
+          <div class="ch-value">${value}</div>
+        </div>`;
+
+    let extraFields = '';
+    if (compareFilterMode === 'all') {
+      extraFields += fieldBlock('入手方法', h.how_to_obtain || '-');
+      extraFields += fieldBlock('解説', h.notes || '-');
+      extraFields += fieldBlock('推奨用途', h.best_use || '-');
+      extraFields += fieldBlock('探検スキル', skillsHtml(h.exploration_skills || []));
+      extraFields += fieldBlock('遠征スキル', skillsHtml(h.expedition_skills || []));
+      if (h.mythic_gear_name) extraFields += fieldBlock('英雄専用装備', gearHtmlFull(h));
+    } else if (compareFilterMode === 'expedition') {
+      extraFields += fieldBlock('遠征スキル', skillsHtml(h.expedition_skills || []));
+      if (h.mythic_gear_expedition) extraFields += fieldBlock('専用装備（遠征）', gearHtmlExpedition(h));
+    } else if (compareFilterMode === 'exploration') {
+      extraFields += fieldBlock('探検スキル', skillsHtml(h.exploration_skills || []));
+      if (h.mythic_gear_exploration) extraFields += fieldBlock('専用装備（探検）', gearHtmlExploration(h));
+    }
+
     cardsHtml += `
       <div class="compare-hero-card">
         <div class="ch-head">
@@ -2714,32 +3264,10 @@ function openCompareModal() {
           ${h.rarity} ・ 第${h.generation}世代
         </div>
         <div class="ch-field">
-          <div class="ch-label">遠征ティア / 探検ティア</div>
-          <div class="ch-tiers">
-            <span class="tier-chip" style="background:${tierColors[h.tier_expedition] || '#888'}">遠征 ${h.tier_expedition}</span>
-            <span class="tier-chip" style="background:${tierColors[h.tier_exploration] || '#888'}">探検 ${h.tier_exploration}</span>
-          </div>
+          <div class="ch-label">${compareFilterMode === 'all' ? '遠征ティア / 探検ティア' : compareFilterMode === 'expedition' ? '遠征ティア' : '探検ティア'}</div>
+          <div class="ch-tiers">${tierLine}</div>
         </div>
-        <div class="ch-field">
-          <div class="ch-label">入手方法</div>
-          <div class="ch-value">${h.how_to_obtain || '-'}</div>
-        </div>
-        <div class="ch-field">
-          <div class="ch-label">解説</div>
-          <div class="ch-value">${h.notes || '-'}</div>
-        </div>
-        <div class="ch-field">
-          <div class="ch-label">推奨用途</div>
-          <div class="ch-value">${h.best_use || '-'}</div>
-        </div>
-        <div class="ch-field">
-          <div class="ch-label">探検スキル</div>
-          <div class="ch-value">${skillsHtml(h.exploration_skills || [])}</div>
-        </div>
-        <div class="ch-field">
-          <div class="ch-label">遠征スキル</div>
-          <div class="ch-value">${skillsHtml(h.expedition_skills || [])}</div>
-        </div>
+        ${extraFields}
       </div>
     `;
   });
@@ -2747,8 +3275,15 @@ function openCompareModal() {
 
   document.getElementById('compareTableWrap').innerHTML = html + cardsHtml;
   document.getElementById('compareModalTitle').textContent = list.length === 1 ? '英雄詳細' : '英雄比較';
-  document.getElementById('modalOverlay').classList.add('open');
 }
+
+document.getElementById('modalFilterTabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.filter-tab');
+  if (!btn) return;
+  compareFilterMode = btn.dataset.mode;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.toggle('active', b === btn));
+  renderCompareContent();
+});
 
 document.getElementById('searchBox').addEventListener('input', render);
 document.getElementById('genFilter').addEventListener('change', render);
