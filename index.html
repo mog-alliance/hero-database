@@ -117,6 +117,8 @@
   }
   .compare-tray.empty { display: none; }
   .tray-label { font-size: 12px; color: var(--muted); }
+  .tray-chips-row { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .compare-tray-actions { display: flex; gap: 8px; }
   .tray-chip {
     background: var(--panel2);
     border: 1px solid var(--border);
@@ -126,6 +128,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .tray-chip button {
     background: none;
@@ -227,6 +231,25 @@
     .name { font-size: 14px; }
     h1 { font-size: 19px; }
     .compare-hero-card .ch-head h3 { font-size: 16px; }
+    .compare-tray {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 10px 12px;
+      gap: 8px;
+    }
+    .compare-tray .tray-label { display: none; }
+    #trayChips {
+      flex: none !important;
+      overflow-x: auto;
+      flex-wrap: nowrap !important;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+    }
+    .compare-tray-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .compare-tray-actions .btn { flex: 1; }
   }
   .gear-name { font-weight: 700; font-size: 13px; color: #F1C40F; margin-bottom: 6px; }
   .modal-filter-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
@@ -298,9 +321,11 @@
 
 <div class="compare-tray empty" id="compareTray">
   <span class="tray-label">選択中:</span>
-  <div id="trayChips" style="display:flex; gap:6px; flex-wrap:wrap; flex:1;"></div>
-  <button class="btn secondary" id="clearTray">クリア</button>
-  <button class="btn" id="openCompare">詳細・比較を見る</button>
+  <div id="trayChips" class="tray-chips-row"></div>
+  <div class="compare-tray-actions">
+    <button class="btn secondary" id="clearTray">クリア</button>
+    <button class="btn" id="openCompare">詳細・比較を見る</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
