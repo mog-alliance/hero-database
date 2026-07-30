@@ -2,6 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>ホワイトアウトサバイバル 英雄データベース</title>
 <style>
   :root {
@@ -210,11 +214,19 @@
     font-weight: 700;
   }
   @media (max-width: 680px) {
+    body { padding: 12px; }
     .table-scroll { display: none; }
     .compare-cards-view { display: block; }
     .modal-overlay { padding: 10px; align-items: flex-start; }
     .modal { padding: 14px; max-height: 92vh; }
     .toolbar { padding: 10px; }
+    .toolbar input, .toolbar select { font-size: 15px; padding: 10px 12px; }
+    .toolbar input[type="text"] { min-width: 100%; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+    .card { padding: 10px; }
+    .name { font-size: 14px; }
+    h1 { font-size: 19px; }
+    .compare-hero-card .ch-head h3 { font-size: 16px; }
   }
   .gear-name { font-weight: 700; font-size: 13px; color: #F1C40F; margin-bottom: 6px; }
   .modal-filter-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
@@ -3178,22 +3190,32 @@ const gearHtmlExploration = h => {
   return `<div class="gear-name">${h.mythic_gear_name}</div><div class="skill-line"><span class="skill-name">${h.mythic_gear_exploration.name}</span>${h.mythic_gear_exploration.desc}</div>`;
 };
 
-// Each field is tagged 'all' | 'expedition' | 'exploration' so the modal filter tabs can narrow the view
+// Field visibility rules per modal filter tab:
+//   'always'      -> shown in every mode
+//   'onlyAll'     -> shown only when mode is "all" (hidden in the narrowed expedition/exploration views)
+//   'expedition'  -> shown in "all" mode and "expedition" mode
+//   'exploration' -> shown in "all" mode and "exploration" mode
 const FIELD_DEFS = [
-  ['兵種', h => h.hero_class, 'all'],
-  ['レアリティ', h => h.rarity, 'all'],
-  ['世代', h => '第' + h.generation + '世代', 'all'],
-  ['総合ティア', h => h.tier_overall, 'all'],
+  ['兵種', h => h.hero_class, 'always'],
+  ['レアリティ', h => h.rarity, 'onlyAll'],
+  ['世代', h => '第' + h.generation + '世代', 'onlyAll'],
+  ['総合ティア', h => h.tier_overall, 'onlyAll'],
   ['遠征ティア', h => h.tier_expedition, 'expedition'],
   ['探検ティア', h => h.tier_exploration, 'exploration'],
-  ['入手方法', h => h.how_to_obtain || '-', 'all'],
-  ['解説', h => h.notes || '-', 'all'],
-  ['推奨用途', h => h.best_use || '-', 'all'],
+  ['入手方法', h => h.how_to_obtain || '-', 'always'],
+  ['解説', h => h.notes || '-', 'always'],
+  ['推奨用途', h => h.best_use || '-', 'always'],
   ['探検スキル', h => skillsHtml(h.exploration_skills || []), 'exploration'],
   ['遠征スキル', h => skillsHtml(h.expedition_skills || []), 'expedition'],
   ['専用装備（探検）', h => gearHtmlExploration(h), 'exploration'],
   ['専用装備（遠征）', h => gearHtmlExpedition(h), 'expedition'],
 ];
+
+function fieldVisible(type) {
+  if (type === 'always') return true;
+  if (compareFilterMode === 'all') return true;
+  return type === compareFilterMode;
+}
 
 let compareFilterMode = 'all';
 let currentCompareList = [];
@@ -3209,7 +3231,7 @@ function openCompareModal() {
 
 function renderCompareContent() {
   const list = currentCompareList;
-  const rows = FIELD_DEFS.filter(([, , type]) => compareFilterMode === 'all' || type === 'all' || type === compareFilterMode);
+  const rows = FIELD_DEFS.filter(([, , type]) => fieldVisible(type));
 
   let html = '<div class="table-scroll"><table><thead><tr><th>項目</th>';
   list.forEach(h => html += `<td class="hero-col-name">${h.name}</td>`);
@@ -3261,7 +3283,7 @@ function renderCompareContent() {
         </div>
         <div class="ch-meta">
           <span class="class-tag" style="background:${classColors[h.hero_class] || '#888'}">${h.hero_class}</span>
-          ${h.rarity} ・ 第${h.generation}世代
+          ${compareFilterMode === 'all' ? `${h.rarity} ・ 第${h.generation}世代` : ''}
         </div>
         <div class="ch-field">
           <div class="ch-label">${compareFilterMode === 'all' ? '遠征ティア / 探検ティア' : compareFilterMode === 'expedition' ? '遠征ティア' : '探検ティア'}</div>
