@@ -46,6 +46,18 @@
     font-size: 13px;
   }
   .toolbar input[type="text"] { flex: 1; min-width: 160px; }
+  .gen-range { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+  .gen-range select { min-width: 100px; }
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .checkbox-label input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
   .count { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
   .grid {
     display: grid;
@@ -279,7 +291,11 @@
 
 <div class="toolbar">
   <input type="text" id="searchBox" placeholder="英雄名で検索...">
-  <select id="genFilter"><option value="">全世代</option></select>
+  <span class="gen-range">
+    <select id="genFilterFrom"><option value="">世代(から)</option></select>
+    〜
+    <select id="genFilterTo"><option value="">世代(まで)</option></select>
+  </span>
   <select id="classFilter">
     <option value="">全兵種</option>
     <option value="盾兵">盾兵</option>
@@ -306,6 +322,10 @@
     <option value="name">名前順</option>
     <option value="gen">世代順</option>
   </select>
+  <label class="checkbox-label">
+    <input type="checkbox" id="luckyWheelFilter">
+    ラッキールーレットで入手可能な英雄のみ
+  </label>
 </div>
 
 <div class="count" id="countLabel"></div>
@@ -3105,11 +3125,13 @@ let selected = new Set();
 
 function populateGenFilter() {
   const gens = [...new Set(heroes.map(h => h.generation))].sort((a,b)=>a-b);
-  const sel = document.getElementById('genFilter');
-  gens.forEach(g => {
-    const opt = document.createElement('option');
-    opt.value = g; opt.textContent = '第' + g + '世代';
-    sel.appendChild(opt);
+  ['genFilterFrom', 'genFilterTo'].forEach(id => {
+    const sel = document.getElementById(id);
+    gens.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g; opt.textContent = '第' + g + '世代';
+      sel.appendChild(opt);
+    });
   });
 }
 
@@ -3120,18 +3142,22 @@ function tierRank(t) {
 
 function getFiltered() {
   const q = document.getElementById('searchBox').value.trim().toLowerCase();
-  const gen = document.getElementById('genFilter').value;
+  const genFrom = document.getElementById('genFilterFrom').value;
+  const genTo = document.getElementById('genFilterTo').value;
   const cls = document.getElementById('classFilter').value;
   const rar = document.getElementById('rarityFilter').value;
   const tier = document.getElementById('tierFilter').value;
   const sortBy = document.getElementById('sortBy').value;
+  const luckyOnly = document.getElementById('luckyWheelFilter').checked;
 
   let list = heroes.filter(h => {
     if (q && !h.name.toLowerCase().includes(q)) return false;
-    if (gen && String(h.generation) !== gen) return false;
+    if (genFrom && h.generation < Number(genFrom)) return false;
+    if (genTo && h.generation > Number(genTo)) return false;
     if (cls && h.hero_class !== cls) return false;
     if (rar && h.rarity !== rar) return false;
     if (tier && h.tier_overall !== tier) return false;
+    if (luckyOnly && !(h.how_to_obtain || '').includes('ラッキールーレット')) return false;
     return true;
   });
 
@@ -3333,8 +3359,10 @@ document.getElementById('modalFilterTabs').addEventListener('click', (e) => {
 });
 
 document.getElementById('searchBox').addEventListener('input', render);
-document.getElementById('genFilter').addEventListener('change', render);
+document.getElementById('genFilterFrom').addEventListener('change', render);
+document.getElementById('genFilterTo').addEventListener('change', render);
 document.getElementById('classFilter').addEventListener('change', render);
+document.getElementById('luckyWheelFilter').addEventListener('change', render);
 document.getElementById('rarityFilter').addEventListener('change', render);
 document.getElementById('tierFilter').addEventListener('change', render);
 document.getElementById('sortBy').addEventListener('change', render);
