@@ -292,9 +292,9 @@
 <div class="toolbar">
   <input type="text" id="searchBox" placeholder="英雄名で検索...">
   <span class="gen-range">
-    <select id="genFilterFrom"><option value="">世代(から)</option></select>
+    <select id="genFilterFrom"></select>
     〜
-    <select id="genFilterTo"><option value="">世代(まで)</option></select>
+    <select id="genFilterTo"></select>
   </span>
   <select id="classFilter">
     <option value="">全兵種</option>
@@ -3125,6 +3125,8 @@ let selected = new Set();
 
 function populateGenFilter() {
   const gens = [...new Set(heroes.map(h => h.generation))].sort((a,b)=>a-b);
+  const minGen = gens[0];
+  const maxGen = gens[gens.length - 1];
   ['genFilterFrom', 'genFilterTo'].forEach(id => {
     const sel = document.getElementById(id);
     gens.forEach(g => {
@@ -3133,6 +3135,8 @@ function populateGenFilter() {
       sel.appendChild(opt);
     });
   });
+  document.getElementById('genFilterFrom').value = minGen;
+  document.getElementById('genFilterTo').value = maxGen;
 }
 
 function tierRank(t) {
